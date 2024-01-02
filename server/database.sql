@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     first_name VARCHAR(20) NOT NULL,
     last_name VARCHAR(20) NOT NULL,
-    bio VARCHAR(200) NOT NULL,
+    bio VARCHAR(200),
     profile_pic VARCHAR(200),
     is_admin BOOLEAN DEFAULT FALSE
 );
