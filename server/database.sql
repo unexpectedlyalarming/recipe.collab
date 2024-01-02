@@ -59,20 +59,13 @@ CREATE TABLE IF NOT EXISTS instructions (
     image VARCHAR(200)
 );
 
-CREATE TABLE IF NOT EXISTS recipe_interactions (
-    interaction_id SERIAL PRIMARY KEY,
-    recipe_id INT REFERENCES recipes(recipe_id),
-    user_id INT REFERENCES users(user_id),
-    interaction_type VARCHAR(20) NOT NULL, -- 'star', 'comment', 'fork'
-    comment TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
 
-
-CREATE TABLE IF NOT EXISTS recipe_version (
+CREATE TABLE IF NOT EXISTS recipe_versions (
     version_id SERIAL PRIMARY KEY,
     original_recipe_id INT REFERENCES recipes(recipe_id),
     version_number INT NOT NULL
     recipe_id INT REFERENCES recipes(recipe_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
