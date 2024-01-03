@@ -88,9 +88,41 @@ router.post("/login", async (req, res) => {
       last_name: user.rows[0].last_name,
       bio: user.rows[0].bio,
     };
+
+    const token = jwt.sign(filteredUser, secret_key);
+
+    res.cookie("accessToken", token, {
+      httpOnly: true,
+      maxAge: 1000 * 60 * 30,
+    });
+
     req.user = filteredUser;
 
     res.status(200).json(filteredUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Logout
+
+router.get("/logout", async (req, res) => {
+  try {
+    res.cookie("accessToken", "", { maxAge: 1, httpOnly: true });
+    req.user = null;
+    res.status(200).json({ msg: "Logged out." });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Check session
+
+const verifyUser = require("../utils/authUtils");
+
+router.get("/session", verifyUser, async (req, res) => {
+  try {
+    res.status(200).json(req.user);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
