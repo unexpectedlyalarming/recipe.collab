@@ -310,4 +310,108 @@ async function checkValidForm(req, res, next) {
 //     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 // );
 
+//Create recipe fork
+
+router.post("/fork/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [id]
+    );
+
+    const ingredients = await pool.query(
+      "SELECT * FROM ingredients WHERE recipe_id = $1",
+      [id]
+    );
+
+    const instructions = await pool.query(
+      "SELECT * FROM instructions WHERE recipe_id = $1",
+      [id]
+    );
+
+    const recipeObject = {
+      recipe_id: recipe.rows[0].recipe_id,
+      title: recipe.rows[0].title,
+      description: recipe.rows[0].description,
+      user_id: recipe.rows[0].user_id,
+      image: recipe.rows[0].image,
+      tags: recipe.rows[0].tags,
+      preparation_time: recipe.rows[0].preparation_time,
+      cooking_time: recipe.rows[0].cooking_time,
+      servings: recipe.rows[0].servings,
+      difficulty_level: recipe.rows[0].difficulty_level,
+      ingredients: ingredients.rows,
+      instructions: instructions.rows,
+    };
+
+    //Create new recipe and recipe version
+
+    const newRecipe = await pool.query(
+      "INSERT INTO recipes (title, description, user_id, image, tags, preparation_time, cooking_time, servings, difficulty_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+      [
+        recipeObject.title,
+        recipeObject.description,
+        req.user,
+        recipeObject.image,
+        recipeObject.tags,
+        recipeObject.preparation_time,
+        recipeObject.cooking_time,
+        recipeObject.servings,
+        recipeObject.difficulty_level,
+      ]
+    );
+
+    //Get old recipe version number (if exists)
+
+    let versionNumber = 1;
+
+    const oldRecipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
+      [id]
+    );
+
+    if (oldRecipeVersion.rows.length > 0) {
+      versionNumber = oldRecipeVersion.rows[0].version_number + 1;
+    }
+
+    const newRecipeVersion = await pool.query(
+      "INSERT INTO recipe_versions (original_recipe_id, version_number, recipe_id) VALUES ($1, $2, $3) RETURNING *",
+      [id, versionNumber, newRecipe.rows[0].recipe_id]
+    );
+
+    res.status(200).json(recipeObject);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete recipe
+
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [id]
+    );
+
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
+
+    if (recipe.rows[0].user_id !== req.user.id) {
+      return res.status(401).json({ msg: "Not authorized." });
+    }
+
+    await pool.query("DELETE FROM recipes WHERE recipe_id = $1", [id]);
+
+    res.status(200).json("Recipe was deleted.");
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

@@ -13,6 +13,14 @@ CREATE TABLE IF NOT EXISTS users (
     is_admin BOOLEAN DEFAULT FALSE
 );
 
+CREATE TABLE IF NOT EXISTS user_follows (
+    follow_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    follower_id INT REFERENCES users(user_id)
+);
+
+
+
 CREATE TABLE IF NOT EXISTS recipes (
     recipe_id SERIAL PRIMARY KEY,
     title VARCHAR(50) NOT NULL,
