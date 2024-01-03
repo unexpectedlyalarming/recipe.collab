@@ -6,21 +6,6 @@ const pool = require("../db");
 
 // Recipes routes
 
-// CREATE TABLE IF NOT EXISTS recipes (
-//     recipe_id SERIAL PRIMARY KEY,
-//     title VARCHAR(50) NOT NULL,
-//     description TEXT,
-//     user_id INT REFERENCES users(user_id),
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     image VARCHAR(200),
-//     tags VARCHAR[],
-//     preparation_time INTERVAL,
-//     cooking_time INTERVAL,
-//     servings INT,
-//     difficulty_level VARCHAR(20)
-// );
-
 //Client side object protoype:
 
 // {
@@ -76,7 +61,7 @@ router.post("/", checkValidForm, async (req, res) => {
       instructions,
     } = req.body;
 
-    const user_id = req.user;
+    const user_id = req.user.id;
 
     const newRecipe = await pool.query(
       "INSERT INTO recipes (title, description, user_id, image, tags, preparation_time, cooking_time, servings, difficulty_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
@@ -153,12 +138,6 @@ router.get("/sort/date/:page/:limit", async (req, res) => {
 
 // Get recipes, sort by user_stars, limit and paginate
 
-//CREATE TABLE IF NOT EXISTS user_stars (
-//     starred_id SERIAL PRIMARY KEY,
-//     user_id INT REFERENCES users(user_id),
-//     recipe_id INT REFERENCES recipes(recipe_id)
-// );
-
 router.get("/sort/stars/:page/:limit", async (req, res) => {
   try {
     const { page, limit } = req.params;
@@ -200,11 +179,31 @@ router.get("/:id", async (req, res) => {
       [id]
     );
 
+    const user = await pool.query("SELECT * FROM users WHERE user_id = $1", [
+      recipe.rows[0].user_id,
+    ]);
+
+    const stars = await pool.query(
+      "SELECT * FROM user_stars WHERE recipe_id = $1",
+      [id]
+    );
+
+    const comments = await pool.query(
+      "SELECT * FROM user_comments WHERE recipe_id = $1",
+      [id]
+    );
+
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
       title: recipe.rows[0].title,
       description: recipe.rows[0].description,
       user_id: recipe.rows[0].user_id,
+      username: user.rows[0].username,
+      first_name: user.rows[0].first_name,
+      last_name: user.rows[0].last_name,
+      profile_pic: user.rows[0].profile_pic,
+      created_at: recipe.rows[0].created_at,
+      updated_at: recipe.rows[0].updated_at,
       image: recipe.rows[0].image,
       tags: recipe.rows[0].tags,
       preparation_time: recipe.rows[0].preparation_time,
@@ -213,6 +212,8 @@ router.get("/:id", async (req, res) => {
       difficulty_level: recipe.rows[0].difficulty_level,
       ingredients: ingredients.rows,
       instructions: instructions.rows,
+      stars: stars.rows,
+      comments: comments.rows,
     };
 
     res.status(200).json(recipeObject);
@@ -240,7 +241,61 @@ router.put("/:id", checkValidForm, async (req, res) => {
       instructions,
     } = req.body;
 
-    const user_id = req.user;
+    const user_id = req.user.id;
+
+    const recipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [id]
+    );
+
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
+
+    if (recipe.rows[0].user_id !== req.user.id) {
+      return res.status(401).json({ msg: "Not authorized." });
+    }
+
+    const updated_at = new Date();
+
+    const updatedRecipe = await pool.query(
+      "UPDATE recipes SET title = $1, description = $2, user_id = $3, image = $4, tags = $5, preparation_time = $6, cooking_time = $7, servings = $8, difficulty_level = $9, updated_at = $10 WHERE recipe_id = $11 RETURNING *",
+      [
+        title,
+        description,
+        user_id,
+        image,
+        tags,
+        preparation_time,
+        cooking_time,
+        servings,
+        difficulty_level,
+        updated_at,
+        id,
+      ]
+    );
+
+    //Update ingredients
+
+    ingredients.forEach(async (ingredient) => {
+      const { name, quantity, unit, ingredient_id } = ingredient;
+      const newIngredient = await pool.query(
+        "UPDATE ingredients SET name = $1, quantity = $2, unit = $3 WHERE recipe_id = $4 AND ingredient_id = $5 RETURNING *",
+        [name, quantity, unit, id, ingredient_id]
+      );
+    });
+
+    //Update instructions
+
+    instructions.forEach(async (instruction) => {
+      const { step_number, description, image, instruction_id } = instruction;
+      const newInstruction = await pool.query(
+        "UPDATE instructions SET step_number = $1, description = $2, image = $3 WHERE recipe_id = $4 AND instruction_id = $5 RETURNING *",
+        [step_number, description, image, id, instruction_id]
+      );
+    });
+
+    return res.status(200).json(updatedRecipe.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -278,37 +333,6 @@ async function checkValidForm(req, res, next) {
     res.status(500).json({ error: error.message });
   }
 }
-
-// Ingredients routes
-
-// CREATE TABLE IF NOT EXISTS ingredients (
-//     ingredient_id SERIAL PRIMARY KEY,
-//     recipe_id INT REFERENCES recipes(recipe_id),
-//     name VARCHAR(80) NOT NULL,
-//     quantity NUMERIC NOT NULL,
-//     unit VARCHAR(50) NOT NULL
-// );
-
-// Instructions routes
-
-// CREATE TABLE IF NOT EXISTS instructions (
-//     instruction_id SERIAL PRIMARY KEY,
-//     recipe_id INT REFERENCES recipes(recipe_id),
-//     step_number INT NOT NULL,
-//     description TEXT NOT NULL,
-//     image VARCHAR(200)
-// );
-
-// Recipe versions routes
-
-// CREATE TABLE IF NOT EXISTS recipe_versions (
-//     version_id SERIAL PRIMARY KEY,
-//     original_recipe_id INT REFERENCES recipes(recipe_id),
-//     version_number INT NOT NULL,
-//     recipe_id INT REFERENCES recipes(recipe_id),
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-// );
 
 //Create recipe fork
 
@@ -353,7 +377,7 @@ router.post("/fork/:id", async (req, res) => {
       [
         recipeObject.title,
         recipeObject.description,
-        req.user,
+        req.user.id,
         recipeObject.image,
         recipeObject.tags,
         recipeObject.preparation_time,
@@ -409,6 +433,99 @@ router.delete("/:id", async (req, res) => {
     await pool.query("DELETE FROM recipes WHERE recipe_id = $1", [id]);
 
     res.status(200).json("Recipe was deleted.");
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Comments
+
+// Create comment
+
+router.post("/comment/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+
+    const recipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [id]
+    );
+
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
+
+    const newComment = await pool.query(
+      "INSERT INTO user_comments (user_id, recipe_id, comment) VALUES ($1, $2, $3) RETURNING *",
+      [req.user.id, id, comment]
+    );
+
+    res.status(200).json(newComment.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Edit comment
+
+router.put("/comment/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { comment } = req.body;
+
+    const recipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [id]
+    );
+
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
+
+    const oldComment = await pool.query(
+      "SELECT * FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
+      [req.user.id, id]
+    );
+
+    if (oldComment.rows.length === 0) {
+      return res.status(400).json({ msg: "Comment does not exist." });
+    }
+
+    const updated_at = new Date();
+
+    const newComment = await pool.query(
+      "UPDATE user_comments SET comment = $1, updated_at = $2 WHERE user_id = $3 AND recipe_id = $4 RETURNING *",
+      [comment, updated_at, req.user.id, id]
+    );
+
+    res.status(200).json(newComment.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Delete comment
+
+router.delete("/comment/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const oldComment = await pool.query(
+      "SELECT * FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
+      [req.user.id, id]
+    );
+
+    if (oldComment.rows.length === 0) {
+      return res.status(400).json({ msg: "Comment does not exist." });
+    }
+
+    await pool.query(
+      "DELETE FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
+      [req.user.id, id]
+    );
+
+    res.status(200).json("Comment was deleted.");
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
