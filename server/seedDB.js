@@ -2,6 +2,7 @@ const Pool = require("pg").Pool;
 const dotenv = require("dotenv");
 const fs = require("fs");
 const { faker } = require("@faker-js/faker");
+const readlineSync = require("readline-sync");
 
 dotenv.config();
 
@@ -10,31 +11,15 @@ const dbPassword = process.env.DB_PASSWORD || "";
 const dbName = process.env.DB_NAME || "recipecollabdb";
 const dbHost = process.env.DB_HOST || "localhost";
 
-const env = process.env.ENV_TYPE || "dev";
+console.log("Using dev environment");
 
-let poolOptions;
+let poolOptions = {
+  user: dbUser,
+  host: dbHost,
+  port: 5432,
+  database: dbName,
+};
 
-if (env === "dev") {
-  console.log("Using dev environment");
-
-  poolOptions = {
-    user: dbUser,
-    host: dbHost,
-    port: 5432,
-    database: dbName,
-  };
-}
-
-if (env === "production") {
-  console.log("Using production environment");
-  poolOptions = {
-    user: dbUser,
-    host: dbHost,
-    port: 5432,
-    database: dbName,
-    password: dbPassword,
-  };
-}
 const pool = new Pool(poolOptions);
 
 async function initializeDB() {
@@ -53,6 +38,7 @@ async function initializeDB() {
     await client.query("DROP TABLE IF EXISTS users");
 
     await client.query(initScript);
+
     client.release();
 
     console.log("Database initialized");
@@ -304,11 +290,11 @@ async function seedDB() {
       await client.query(query, values);
     }
 
-    console.log("Database seeded successfully! 🌱 \nHappy coding! 🎉");
-
     client.release();
   } catch (error) {
     console.error(error);
+  } finally {
+    console.log("Database seeded successfully! 🌱 \nHappy coding! 🎉");
   }
 }
 
@@ -321,4 +307,11 @@ async function initalizeAndSeed() {
   }
 }
 
-initalizeAndSeed();
+const confirm = readlineSync.question(
+  "WARNING: This will delete all data in the database and is UNRECOVERABLE. If you are looking to initialize the database, run 'npm run setup' instead, and set your environment to production.\nAre you sure you want to seed the database? (y/n): "
+);
+if (confirm.toLowerCase() === "yes" || confirm.toLowerCase() === "y") {
+  initalizeAndSeed();
+} else {
+  console.log("Exiting...");
+}
