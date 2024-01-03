@@ -16,16 +16,16 @@ CREATE TABLE IF NOT EXISTS users (
 CREATE TABLE IF NOT EXISTS recipes (
     recipe_id SERIAL PRIMARY KEY,
     title VARCHAR(50) NOT NULL,
-    description TEXT,
+    description TEXT NOT NULL,
     user_id INT REFERENCES users(user_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     image VARCHAR(200),
     tags VARCHAR[],
-    preparation_time INTERVAL,
-    cooking_time INTERVAL,
-    servings INT,
-    difficulty_level VARCHAR(20)
+    preparation_time INTERVAL NOT NULL,
+    cooking_time INTERVAL NOT NULL,
+    servings INT NOT NULL,
+    difficulty_level VARCHAR(20) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_stars (
