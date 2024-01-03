@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "setup": "node seedDB.js"
+    "setup-db": "node seedDB.js"
   },
   "repository": {
     "type": "git",
@@ -27,5 +27,8 @@
     "morgan": "^1.10.0",
     "multer": "^1.4.5-lts.1",
     "pg": "^8.11.3"
+  },
+  "devDependencies": {
+    "@faker-js/faker": "^8.3.1"
   }
 }
