@@ -9,6 +9,12 @@ app.use(cors());
 
 app.use(express.json());
 
+//Routes
+
+const authRouter = require("./routes/auth");
+
+app.use("/auth", authRouter);
+
 app.listen(3000, () => {
   console.log("server started");
 });

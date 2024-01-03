@@ -10,8 +10,24 @@ router.post("/register", async (req, res) => {
   try {
     const { username, password, email, first_name, last_name, bio } = req.body;
 
-    if (!username || !password || !email || !first_name || !last_name || !bio) {
-      return res.status(400).json({ msg: "Not all fields have been entered." });
+    switch (req.body) {
+      case !username:
+        return res.status(400).json({ msg: "Username is required." });
+
+      case !password:
+        return res.status(400).json({ msg: "Password is required." });
+
+      case !email:
+        return res.status(400).json({ msg: "Email is required." });
+
+      case !first_name:
+        return res.status(400).json({ msg: "First name is required." });
+
+      case !last_name:
+        return res.status(400).json({ msg: "Last name is required." });
+
+      case !bio:
+        return res.status(400).json({ msg: "Bio is required." });
     }
 
     const user = await pool.query("SELECT * FROM users WHERE username = $1", [
