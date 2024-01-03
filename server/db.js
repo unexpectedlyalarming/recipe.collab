@@ -9,26 +9,29 @@ const dbName = process.env.DB_NAME || "recipecollabdb";
 const dbHost = process.env.DB_HOST || "localhost";
 const env = process.env.ENV_TYPE || "dev";
 
-if (env === "dev") {
-  console.log("Using dev database");
+let poolOptions;
 
-  const pool = new Pool({
+if (env === "dev") {
+  console.log("Using dev environment");
+
+  poolOptions = {
     user: dbUser,
-    host: "localhost",
+    host: dbHost,
     port: 5432,
     database: dbName,
-  });
+  };
 }
 
 if (env === "production") {
-  console.log("Using production database");
-  const pool = new Pool({
+  console.log("Using production environment");
+  poolOptions = {
     user: dbUser,
     host: dbHost,
-    password: dbPassword,
     port: 5432,
     database: dbName,
-  });
+    password: dbPassword,
+  };
 }
+const pool = new Pool(poolOptions);
 
 module.exports = pool;

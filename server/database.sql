@@ -2,12 +2,12 @@
 
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
-    username VARCHAR(20) NOT NULL UNIQUE,
-    password VARCHAR(20) NOT NULL,
+    username VARCHAR(24) NOT NULL UNIQUE,
+    password VARCHAR(24) NOT NULL,
     email VARCHAR(50) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    first_name VARCHAR(20) NOT NULL,
-    last_name VARCHAR(20) NOT NULL,
+    first_name VARCHAR(24) NOT NULL,
+    last_name VARCHAR(24) NOT NULL,
     bio VARCHAR(200),
     profile_pic VARCHAR(200),
     is_admin BOOLEAN DEFAULT FALSE
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     preparation_time INTERVAL NOT NULL,
     cooking_time INTERVAL NOT NULL,
     servings INT NOT NULL,
-    difficulty_level VARCHAR(20) NOT NULL
+    difficulty_level VARCHAR(24) NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS user_stars (

@@ -8,23 +8,50 @@ dotenv.config();
 const dbUser = process.env.DB_USER || "postgres";
 const dbPassword = process.env.DB_PASSWORD || "";
 const dbName = process.env.DB_NAME || "recipecollabdb";
+const dbHost = process.env.DB_HOST || "localhost";
 
 const env = process.env.ENV_TYPE || "dev";
 
+let poolOptions;
+
 if (env === "dev") {
-  console.log("Using dev database");
-  const pool = new Pool({
+  console.log("Using dev environment");
+
+  poolOptions = {
     user: dbUser,
-    host: "localhost",
+    host: dbHost,
     port: 5432,
     database: dbName,
-  });
+  };
 }
+
+if (env === "production") {
+  console.log("Using production environment");
+  poolOptions = {
+    user: dbUser,
+    host: dbHost,
+    port: 5432,
+    database: dbName,
+    password: dbPassword,
+  };
+}
+const pool = new Pool(poolOptions);
 
 async function initializeDB() {
   try {
     const initScript = fs.readFileSync("./database.sql", "utf-8");
     const client = await pool.connect();
+
+    // Drop all tables if they exist
+    await client.query("DROP TABLE IF EXISTS recipe_versions");
+    await client.query("DROP TABLE IF EXISTS instructions");
+    await client.query("DROP TABLE IF EXISTS ingredients");
+    await client.query("DROP TABLE IF EXISTS user_comments");
+    await client.query("DROP TABLE IF EXISTS user_stars");
+    await client.query("DROP TABLE IF EXISTS recipes");
+    await client.query("DROP TABLE IF EXISTS user_follows");
+    await client.query("DROP TABLE IF EXISTS users");
+
     await client.query(initScript);
     client.release();
 
@@ -33,8 +60,6 @@ async function initializeDB() {
     console.error(error);
   }
 }
-
-initializeDB();
 
 async function seedDB() {
   try {
@@ -46,18 +71,29 @@ async function seedDB() {
     const userCount = 70;
 
     for (let i = 0; i < userCount; i++) {
-      const username = faker.internet.userName();
-      const password = faker.internet.password();
-      const email = faker.internet.email();
-      const firstName = faker.person.firstName();
-      const lastName = faker.person.lastName();
+      const password = faker.internet
+        .password({ min: 3, max: 20 })
+        .substring(0, 20);
+      const email = faker.internet.email({ min: 3, max: 15 });
+      const firstName = faker.person
+        .firstName({ min: 3, max: 20 })
+        .substring(0, 20);
+      const lastName = faker.person
+        .lastName({ min: 3, max: 20 })
+        .substring(0, 20);
+      const username = faker.internet
+        .userName({
+          firstName: firstName,
+          lastName: lastName,
+        })
+        .substring(0, 20);
       const bio = faker.lorem.sentence();
       const profilePic = faker.image.avatar();
       const isAdmin = faker.datatype.boolean();
 
       const query = `
                 INSERT INTO users (username, password, email, first_name, last_name, bio, profile_pic, is_admin)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id
             `;
       const values = [
         username,
@@ -101,7 +137,7 @@ async function seedDB() {
 
       const query = `
                 INSERT INTO recipes (title, description, user_id, created_at, updated_at, image, tags, preparation_time, cooking_time, servings, difficulty_level)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING recipe_id
             `;
       const values = [
         title,
@@ -118,6 +154,8 @@ async function seedDB() {
       ];
 
       const result = await client.query(query, values);
+
+      recipe_ids.push(result.rows[0].recipe_id);
 
       // Seed ingredients for recipe
 
@@ -157,7 +195,7 @@ async function seedDB() {
         const recipeId = result.rows[0].recipe_id;
         const stepNumber = i + 1;
         const description = faker.lorem.paragraph();
-        const image = faker.image.urlLoremFlickr({ category: "food" });
+        let image = faker.image.urlLoremFlickr({ category: "food" });
 
         // 2/3 chance of no image for a step
         if (faker.datatype.boolean(0.66)) {
@@ -273,3 +311,14 @@ async function seedDB() {
     console.error(error);
   }
 }
+
+async function initalizeAndSeed() {
+  try {
+    await initializeDB();
+    await seedDB();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+initalizeAndSeed();
