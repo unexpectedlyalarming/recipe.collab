@@ -63,6 +63,9 @@ router.get("/:id", async (req, res) => {
 
 //Update a user
 
+//TODO: Decide whether to allow users to update their username and email
+//ALSO TODO: Decide whether password is input in req.body, or if I should fetch it from the db.
+
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;

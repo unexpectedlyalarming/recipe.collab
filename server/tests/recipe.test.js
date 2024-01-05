@@ -11,6 +11,21 @@ let recipeId;
 
 describe("/recipe routes", () => {
   beforeEach(async () => {
+    //Create a user
+
+    const response = await request(app)
+      .post("/auth/register")
+      .send({
+        username: global.uniqueUsername,
+        password: "test",
+        email: global.uniqueUsername + "@example.com",
+        first_name: "Test",
+        last_name: "User",
+      });
+    expect(response.status).toBe(200);
+  });
+
+  beforeEach(async () => {
     // Log in before each test
     const response = await request(app)
       .post("/auth/login")
@@ -20,6 +35,12 @@ describe("/recipe routes", () => {
       cookie.startsWith("accessToken=")
     );
     expect(accessToken).toBeDefined();
+  });
+
+  afterAll(async () => {
+    //Delete the user after all tests
+    const response = await request(app).delete(`/user/${userId}`);
+    expect(response.status).toBe(200);
   });
 
   describe("POST /recipe", () => {
@@ -163,81 +184,3 @@ describe("/recipe routes", () => {
     });
   });
 });
-
-// Recipes routes
-
-//Client side object protoype:
-
-// {
-//     "title": "My Recipe",
-//     "description": "This is a description of my recipe.",
-//     "user_id": 1,
-//     "image": "http://example.com/image.jpg",
-//     "tags": ["tag1", "tag2"],
-//     "preparation_time": "00:30:00",
-//     "cooking_time": "01:00:00",
-//     "servings": 4,
-//     "difficulty_level": "Easy",
-//     "ingredients": [
-//         {
-//             "name": "Ingredient 1",
-//             "quantity": 2,
-//             "unit": "cups"
-//         },
-//         {
-//             "name": "Ingredient 2",
-//             "quantity": 1,
-//             "unit": "tablespoon"
-//         }
-//     ],
-//     "instructions": [
-//         {
-//             "step_number": 1,
-//             "description": "This is the first step.",
-//             "image": "http://example.com/step1.jpg"
-//         },
-//         {
-//             "step_number": 2,
-//             "description": "This is the second step.",
-//             "image": "http://example.com/step2.jpg"
-//         }
-//     ]
-// }
-
-// Create recipe
-
-// router.post("/", checkValidForm, async (req, res) => {
-
-// // Get recipes, sort by date, limit and paginate
-
-// router.get("/sort/date/:page/:limit", async (req, res) => {
-
-// // Get recipe by id
-
-// router.get("/:id", async (req, res) => {
-
-// // Update recipe (note to frontend: send full data object)
-
-// router.put("/:id", checkValidForm, async (req, res) => {
-
-// //Create recipe fork
-
-// router.post("/fork/:id", async (req, res) => {
-
-// // Delete recipe
-
-// router.delete("/:id", async (req, res) => {
-
-// // Comments
-
-// // Create comment
-
-// router.post("/comment/:id", async (req, res) => {
-
-// // Edit comment
-
-// router.put("/comment/:id", async (req, res) => {
-
-// // Delete comment
-
-// router.delete("/comment/:id", async (req, res) => {
