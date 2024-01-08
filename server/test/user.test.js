@@ -1,11 +1,8 @@
 const request = require("supertest");
-const app = require("../app");
+const app = require("../server");
 const pool = require("../db");
 
-const query = await pool.query("SELECT id FROM users WHERE username = $1", [
-  global.uniqueUsername,
-]);
-const userId = query.rows[0].user_id;
+let userId;
 
 const updatedUser = {
   username: global.uniqueUsername,
@@ -28,8 +25,10 @@ describe("/user routes", () => {
         email: global.uniqueUsername + "@example.com",
         first_name: "Test",
         last_name: "User",
+        bio: "This is a bio.",
       });
     expect(response.status).toBe(200);
+    userId = response.body.user_id;
   });
 
   beforeEach(async () => {
@@ -119,7 +118,7 @@ describe("/star routes", () => {
     it("should return all starred recipes for a user", async () => {
       const response = await request(app).get(`/star/user/${userId}`);
       expect(response.status).toBe(200);
-      expect(response.body.length).toBe(0);
+      expect(response.body.length).toBeGreaterThan(0);
     });
   });
 });

@@ -61,7 +61,8 @@ router.post("/", checkValidForm, async (req, res) => {
       instructions,
     } = req.body;
 
-    const user_id = req.user.id;
+    const user_id = req.user.user_id;
+    console.log(req.user);
 
     const newRecipe = await pool.query(
       "INSERT INTO recipes (title, description, user_id, image, tags, preparation_time, cooking_time, servings, difficulty_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",

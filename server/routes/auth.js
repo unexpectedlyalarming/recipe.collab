@@ -6,6 +6,10 @@ const pool = require("../db");
 
 const bcrypt = require("bcrypt");
 
+const jwt = require("jsonwebtoken");
+
+const secret_key = process.env.SECRET_KEY;
+
 router.post("/register", async (req, res) => {
   try {
     const { username, password, email, first_name, last_name, bio } = req.body;
@@ -87,6 +91,7 @@ router.post("/login", async (req, res) => {
       first_name: user.rows[0].first_name,
       last_name: user.rows[0].last_name,
       bio: user.rows[0].bio,
+      user_id: user.rows[0].user_id,
     };
 
     const token = jwt.sign(filteredUser, secret_key);

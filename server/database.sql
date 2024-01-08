@@ -3,8 +3,8 @@
 CREATE TABLE IF NOT EXISTS users (
     user_id SERIAL PRIMARY KEY,
     username VARCHAR(24) NOT NULL UNIQUE,
-    password VARCHAR(24) NOT NULL,
-    email VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(80) NOT NULL,
+    email VARCHAR(60) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     first_name VARCHAR(24) NOT NULL,
     last_name VARCHAR(24) NOT NULL,

@@ -1,13 +1,12 @@
 const request = require("supertest");
-const app = require("../app");
+const app = require("../server");
 const pool = require("../db");
 
-const query = await pool.query("SELECT id FROM users WHERE username = $1", [
-  global.uniqueUsername,
-]);
-const userId = query.rows[0].user_id;
+let userId;
 
 let recipeId;
+
+let token;
 
 describe("/recipe routes", () => {
   beforeEach(async () => {
@@ -21,6 +20,7 @@ describe("/recipe routes", () => {
         email: global.uniqueUsername + "@example.com",
         first_name: "Test",
         last_name: "User",
+        bio: "This is a bio.",
       });
     expect(response.status).toBe(200);
   });
@@ -35,9 +35,15 @@ describe("/recipe routes", () => {
       cookie.startsWith("accessToken=")
     );
     expect(accessToken).toBeDefined();
+
+    token = accessToken.split(";")[0];
+
+    userId = response.body.user_id;
+
+    console.log(response.headers);
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     //Delete the user after all tests
     const response = await request(app).delete(`/user/${userId}`);
     expect(response.status).toBe(200);
@@ -80,7 +86,8 @@ describe("/recipe routes", () => {
               image: "http://example.com/step2.jpg",
             },
           ],
-        });
+        })
+        .set("Cookie", token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("recipe_id");
 
@@ -90,14 +97,18 @@ describe("/recipe routes", () => {
 
   describe("GET /recipe/sort/date/:page/:limit", () => {
     it("should get recipes, sort by date, limit and paginate", async () => {
-      const response = await request(app).get("/recipe/sort/date/1/10");
+      const response = await request(app)
+        .get("/recipe/sort/date/1/10")
+        .set("Cookie", token);
       expect(response.status).toBe(200);
     });
   });
 
   describe("GET /recipe/:id", () => {
     it("should get recipe by id", async () => {
-      const response = await request(app).get(`/recipe/${recipeId}`);
+      const response = await request(app)
+        .get(`/recipe/${recipeId}`)
+        .set("Cookie", token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("recipe_id");
     });
@@ -139,7 +150,8 @@ describe("/recipe routes", () => {
               image: "http://example.com/step2.jpg",
             },
           ],
-        });
+        })
+        .set("Cookie", token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("recipe_id");
       expect(response.body.description).toBe(
@@ -150,7 +162,9 @@ describe("/recipe routes", () => {
 
   describe("POST /recipe/fork/:id", () => {
     it("should fork recipe", async () => {
-      const response = await request(app).post(`/recipe/fork/${recipeId}`);
+      const response = await request(app)
+        .post(`/recipe/fork/${recipeId}`)
+        .set("Cookie", token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("recipe_id");
     });
@@ -160,7 +174,8 @@ describe("/recipe routes", () => {
     it("should create comment", async () => {
       const response = await request(app)
         .post(`/recipe/comment/${recipeId}`)
-        .send({ comment: "This is a comment." });
+        .send({ comment: "This is a comment." })
+        .set("Cookie", token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("comment_id");
     });
@@ -170,7 +185,8 @@ describe("/recipe routes", () => {
     it("should edit comment", async () => {
       const response = await request(app)
         .put(`/recipe/comment/${recipeId}`)
-        .send({ comment: "This is an edited comment." });
+        .send({ comment: "This is an edited comment." })
+        .set("Cookie", token);
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty("comment_id");
       expect(response.body.comment).toBe("This is an edited comment.");
@@ -179,7 +195,9 @@ describe("/recipe routes", () => {
 
   describe("DELETE /recipe/:id", () => {
     it("should delete recipe", async () => {
-      const response = await request(app).delete(`/recipe/${recipeId}`);
+      const response = await request(app)
+        .delete(`/recipe/${recipeId}`)
+        .set("Cookie", token);
       expect(response.status).toBe(200);
     });
   });
