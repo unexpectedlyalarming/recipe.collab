@@ -10,7 +10,9 @@ CREATE TABLE IF NOT EXISTS users (
     last_name VARCHAR(24) NOT NULL,
     bio VARCHAR(200),
     profile_pic VARCHAR(200),
-    is_admin BOOLEAN DEFAULT FALSE
+    is_admin BOOLEAN DEFAULT FALSE,
+    is_active BOOLEAN DEFAULT FALSE
+
 );
 
 CREATE TABLE IF NOT EXISTS user_follows (
@@ -29,11 +31,33 @@ CREATE TABLE IF NOT EXISTS recipes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     image VARCHAR(200),
-    tags VARCHAR[],
     preparation_time INTERVAL NOT NULL,
     cooking_time INTERVAL NOT NULL,
     servings INT NOT NULL,
     difficulty_level VARCHAR(24) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS recipe_tags (
+    tag_id SERIAL PRIMARY KEY,
+    recipe_id INT REFERENCES recipes(recipe_id),
+    tag VARCHAR(50) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS lists (
+    list_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    name VARCHAR(50) NOT NULL,
+    description TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS list_recipes (
+    list_recipe_id SERIAL PRIMARY KEY,
+    list_id INT REFERENCES lists(list_id),
+    recipe_id INT REFERENCES recipes(recipe_id),
+    UNIQUE(list_id, recipe_id)
+
 );
 
 CREATE TABLE IF NOT EXISTS user_stars (
@@ -46,6 +70,7 @@ CREATE TABLE IF NOT EXISTS user_comments (
     comment_id SERIAL PRIMARY KEY,
     user_id INT REFERENCES users(user_id),
     recipe_id INT REFERENCES recipes(recipe_id),
+    reply_to INT REFERENCES user_comments(comment_id),
     comment TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
@@ -76,5 +101,30 @@ CREATE TABLE IF NOT EXISTS recipe_versions (
     recipe_id INT REFERENCES recipes(recipe_id),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_carts (
+    cart_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    recipe_id INT REFERENCES recipes(recipe_id),
+    UNIQUE(user_id, recipe_id)
+);
+
+CREATE TABLE IF NOT EXISTS recipe_views (
+    view_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    recipe_id INT REFERENCES recipes(recipe_id),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, recipe_id)
+);
+
+
+CREATE TABLE IF NOT EXISTS recipe_ratings (
+    rating_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    recipe_id INT REFERENCES recipes(recipe_id),
+    rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(user_id, recipe_id)
 );
 

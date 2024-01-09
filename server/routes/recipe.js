@@ -4,6 +4,7 @@ const router = express.Router();
 
 const pool = require("../db");
 
+const addView = require("../utils/addView");
 //Client side object protoype:
 
 // {
@@ -158,7 +159,7 @@ router.get("/sort/stars/:page/:limit", async (req, res) => {
 
 // Get recipe by id
 
-router.get("/:id", async (req, res) => {
+router.get("/:id", addView, async (req, res) => {
   try {
     const { id } = req.params;
 
