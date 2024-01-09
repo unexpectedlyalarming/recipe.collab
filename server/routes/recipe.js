@@ -428,6 +428,16 @@ router.delete("/:id", async (req, res) => {
     if (recipe.rows[0].user_id !== req.user.user_id) {
       return res.status(401).json({ msg: "Not authorized." });
     }
+
+    const deletedLists = await pool.query(
+      "DELETE FROM list_recipes WHERE recipe_id = $1",
+      [id]
+    );
+    const deletedCarts = await pool.query(
+      "DELETE FROM user_carts WHERE recipe_id = $1",
+      [id]
+    );
+
     const deletedIngredients = await pool.query(
       "DELETE FROM ingredients WHERE recipe_id = $1",
       [id]

@@ -24,7 +24,6 @@ router.get("/", async (req, res) => {
 router.get("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    //User profile should include all recipes, and stars, exlude password and email
 
     const user = await pool.query("SELECT * FROM users WHERE user_id = $1", [
       id,
@@ -44,6 +43,11 @@ router.get("/:id", async (req, res) => {
       [id]
     );
 
+    const ratings = await pool.query(
+      "SELECT * FROM recipe_ratings WHERE user_id = $1",
+      [id]
+    );
+
     const filteredUser = {
       username: user.rows[0].username,
       first_name: user.rows[0].first_name,
@@ -53,6 +57,7 @@ router.get("/:id", async (req, res) => {
       bio: user.rows[0].bio,
       recipes: recipes.rows,
       stars: stars.rows,
+      ratings: ratings.rows,
     };
 
     res.status(200).json(filteredUser);
