@@ -18,7 +18,6 @@ async function verifyUser(req, res, next) {
 
     req.user = decoded;
 
-    console.log("User: ", req.user);
     const currentTime = Date.now() / 1000;
 
     if (decoded.exp - currentTime < 15) {

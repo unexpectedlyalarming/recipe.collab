@@ -3,10 +3,6 @@ const app = require("../server");
 
 let userId;
 
-let accessToken;
-
-let connectSid;
-
 function generateRandomUniqueUsername() {
   let characters = "abcdefghijklmnopqrstuvwxyz1234567890";
 
@@ -24,22 +20,14 @@ function generateRandomUniqueUsername() {
 
 let request;
 
-let uniqueUsername;
-const updatedUser = {
-  username: uniqueUsername,
-  email: "new" + uniqueUsername + "@example.com",
-  first_name: "Updated",
-  last_name: "User",
-  bio: "This is an updated bio.",
-  profile_pic: "http://example.com/updated.jpg",
-};
-
 describe("/user routes", () => {
+  let uniqueUsername;
+  let accessToken;
   beforeAll(async () => {
-    request = supertest(app);
+    request = supertest.agent(app);
   });
 
-  beforeEach(async () => {
+  beforeAll(async () => {
     //Create a user
     uniqueUsername = generateRandomUniqueUsername();
     const response = await request.post("/auth/register").send({
@@ -63,28 +51,22 @@ describe("/user routes", () => {
     accessToken = cookies
       .find((cookie) => cookie.startsWith("accessToken="))
       .split(";")[0];
-    connectSid = cookies
-      .find((cookie) => cookie.startsWith("connect.sid="))
-      .split(";")[0];
     expect(accessToken).toBeDefined();
-    expect(connectSid).toBeDefined();
 
     userId = response.body.user_id;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     //Delete the user after each test
     const response = await request
       .delete(`/user/${userId}`)
-      .set("Cookie", `${accessToken}; ${connectSid}`);
+      .set("Cookie", accessToken);
     expect(response.status).toBe(200);
   });
 
   describe("GET /user", () => {
     it("should return all users", async () => {
-      const response = await request
-        .get("/user")
-        .set("Cookie", `${accessToken}; ${connectSid}`);
+      const response = await request.get("/user").set("Cookie", accessToken);
       expect(response.status).toBe(200);
       expect(response.body.length).toBeGreaterThan(0);
     });
@@ -94,7 +76,7 @@ describe("/user routes", () => {
     it("should return a user", async () => {
       const response = await request
         .get(`/user/${userId}`)
-        .set("Cookie", `${accessToken}; ${connectSid}`);
+        .set("Cookie", accessToken);
       expect(response.status).toBe(200);
       expect(response.body.username).toBe(uniqueUsername);
     });
@@ -102,10 +84,18 @@ describe("/user routes", () => {
 
   describe("PUT /user/:id", () => {
     it("should update a user", async () => {
+      const updatedUser = {
+        username: await uniqueUsername,
+        email: "new" + (await uniqueUsername).toString() + "@example.com",
+        first_name: "Updated",
+        last_name: "User",
+        bio: "This is an updated bio.",
+        profile_pic: "http://example.com/updatedjpg",
+      };
       const response = await request
         .put(`/user/${userId}`)
         .send(updatedUser)
-        .set("Cookie", `${accessToken}; ${connectSid}`);
+        .set("Cookie", accessToken);
       expect(response.status).toBe(200);
       expect(response.body.email).toBe(updatedUser.email);
     });
@@ -113,45 +103,51 @@ describe("/user routes", () => {
 });
 
 describe("/star routes", () => {
-  beforeEach(async () => {
-    const response = await request
-      .post("/auth/register")
-      .send({
-        username: uniqueUsername,
-        password: "test",
-        email: uniqueUsername + "@example.com",
-        first_name: "Test",
-        last_name: "User",
-      })
-      .set("Cookie", `${accessToken}; ${connectSid}`);
+  let accessToken;
+  beforeAll(async () => {
+    request = supertest.agent(app);
+  });
+
+  beforeAll(async () => {
+    //Create a user
+    uniqueUsername = generateRandomUniqueUsername();
+    const response = await request.post("/auth/register").send({
+      username: uniqueUsername,
+      password: "test",
+      email: uniqueUsername + "@example.com",
+      first_name: "Test",
+      last_name: "User",
+      bio: "This is a bio.",
+    });
     expect(response.status).toBe(200);
   });
 
   beforeEach(async () => {
+    // Log in before each test
     const response = await request
       .post("/auth/login")
-      .send({ username: uniqueUsername, password: "test" })
-      .set("Cookie", `${accessToken}; ${connectSid}`);
+      .send({ username: uniqueUsername, password: "test" });
     expect(response.status).toBe(200);
-    const accessToken = response.headers["set-cookie"].find((cookie) =>
-      cookie.startsWith("accessToken=")
-    );
+    const cookies = response.headers["set-cookie"];
+    accessToken = cookies
+      .find((cookie) => cookie.startsWith("accessToken="))
+      .split(";")[0];
     expect(accessToken).toBeDefined();
+
+    userId = response.body.user_id;
   });
 
-  afterEach(async () => {
+  afterAll(async () => {
     //Delete the user after each test
     const response = await request
       .delete(`/user/${userId}`)
-      .set("Cookie", `${accessToken}; ${connectSid}`);
+      .set("Cookie", accessToken);
     expect(response.status).toBe(200);
   });
 
   describe("POST /star/:id", () => {
     it("should star a recipe", async () => {
-      const response = await request
-        .post(`/star/1`)
-        .set("Cookie", `${accessToken}; ${connectSid}`);
+      const response = await request.post(`/star/1`).set("Cookie", accessToken);
       expect(response.status).toBe(200);
     });
   });
@@ -160,7 +156,7 @@ describe("/star routes", () => {
     it("should return all starred recipes for a user", async () => {
       const response = await request
         .get(`/star/user/${userId}`)
-        .set("Cookie", `${accessToken}; ${connectSid}`);
+        .set("Cookie", accessToken);
       expect(response.status).toBe(200);
       expect(response.body.length).toBeGreaterThan(0);
     });

@@ -8,7 +8,7 @@ const pool = require("../db");
 router.post("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const user_id = req.user.id;
+    const user_id = req.user.user_id;
 
     const recipe = await pool.query(
       "SELECT * FROM recipes WHERE recipe_id = $1",

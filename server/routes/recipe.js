@@ -4,8 +4,6 @@ const router = express.Router();
 
 const pool = require("../db");
 
-// Recipes routes
-
 //Client side object protoype:
 
 // {
@@ -62,7 +60,6 @@ router.post("/", checkValidForm, async (req, res) => {
     } = req.body;
 
     const user_id = req.user.user_id;
-    console.log(req.user);
 
     const newRecipe = await pool.query(
       "INSERT INTO recipes (title, description, user_id, image, tags, preparation_time, cooking_time, servings, difficulty_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
@@ -242,7 +239,7 @@ router.put("/:id", checkValidForm, async (req, res) => {
       instructions,
     } = req.body;
 
-    const user_id = req.user.id;
+    const user_id = req.user.user_id;
 
     const recipe = await pool.query(
       "SELECT * FROM recipes WHERE recipe_id = $1",
@@ -253,7 +250,7 @@ router.put("/:id", checkValidForm, async (req, res) => {
       return res.status(400).json({ msg: "Recipe does not exist." });
     }
 
-    if (recipe.rows[0].user_id !== req.user.id) {
+    if (recipe.rows[0].user_id !== req.user.user_id) {
       return res.status(401).json({ msg: "Not authorized." });
     }
 
@@ -378,7 +375,7 @@ router.post("/fork/:id", async (req, res) => {
       [
         recipeObject.title,
         recipeObject.description,
-        req.user.id,
+        req.user.user_id,
         recipeObject.image,
         recipeObject.tags,
         recipeObject.preparation_time,
@@ -427,11 +424,51 @@ router.delete("/:id", async (req, res) => {
       return res.status(400).json({ msg: "Recipe does not exist." });
     }
 
-    if (recipe.rows[0].user_id !== req.user.id) {
+    if (recipe.rows[0].user_id !== req.user.user_id) {
       return res.status(401).json({ msg: "Not authorized." });
     }
+    const deletedIngredients = await pool.query(
+      "DELETE FROM ingredients WHERE recipe_id = $1",
+      [id]
+    );
+    const deletedInstructions = await pool.query(
+      "DELETE FROM instructions WHERE recipe_id = $1",
+      [id]
+    );
+    const deletedStars = await pool.query(
+      "DELETE FROM user_stars WHERE recipe_id = $1",
+      [id]
+    );
+    const deletedComments = await pool.query(
+      "DELETE FROM user_comments WHERE recipe_id = $1",
+      [id]
+    );
 
-    await pool.query("DELETE FROM recipes WHERE recipe_id = $1", [id]);
+    //Set recipe_id to null in recipe_versions table
+
+    const recipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    if (recipeVersion.rows.length > 0) {
+      const nextRecipeVersion = await pool.query(
+        "SELECT * FROM recipe_versions WHERE original_recipe_id = $1 AND version_number = $2",
+        [
+          recipeVersion.rows[0].original_recipe_id,
+          recipeVersion.rows[0].version_number + 1,
+        ]
+      );
+      const updatedRecipeVersion = await pool.query(
+        "UPDATE recipe_versions SET recipe_id = $1 WHERE recipe_id = $2",
+        [nextRecipeVersion.rows[0].recipe_id, id]
+      );
+
+      const deletedRecipe = await pool.query(
+        "DELETE FROM recipes WHERE recipe_id = $1",
+        [id]
+      );
+    }
 
     res.status(200).json("Recipe was deleted.");
   } catch (error) {
@@ -439,97 +476,99 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+//Yeah, not really sure why I put this here.
+//It'll move to its own route soon.
 // Comments
 
 // Create comment
 
-router.post("/comment/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { comment } = req.body;
+// router.post("/comment/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { comment } = req.body;
 
-    const recipe = await pool.query(
-      "SELECT * FROM recipes WHERE recipe_id = $1",
-      [id]
-    );
+//     const recipe = await pool.query(
+//       "SELECT * FROM recipes WHERE recipe_id = $1",
+//       [id]
+//     );
 
-    if (recipe.rows.length === 0) {
-      return res.status(400).json({ msg: "Recipe does not exist." });
-    }
+//     if (recipe.rows.length === 0) {
+//       return res.status(400).json({ msg: "Recipe does not exist." });
+//     }
 
-    const newComment = await pool.query(
-      "INSERT INTO user_comments (user_id, recipe_id, comment) VALUES ($1, $2, $3) RETURNING *",
-      [req.user.id, id, comment]
-    );
+//     const newComment = await pool.query(
+//       "INSERT INTO user_comments (user_id, recipe_id, comment) VALUES ($1, $2, $3) RETURNING *",
+//       [req.user.user_id, id, comment]
+//     );
 
-    res.status(200).json(newComment.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     res.status(200).json(newComment.rows[0]);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
-// Edit comment
+// // Edit comment
 
-router.put("/comment/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { comment } = req.body;
+// router.put("/comment/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { comment } = req.body;
 
-    const recipe = await pool.query(
-      "SELECT * FROM recipes WHERE recipe_id = $1",
-      [id]
-    );
+//     const recipe = await pool.query(
+//       "SELECT * FROM recipes WHERE recipe_id = $1",
+//       [id]
+//     );
 
-    if (recipe.rows.length === 0) {
-      return res.status(400).json({ msg: "Recipe does not exist." });
-    }
+//     if (recipe.rows.length === 0) {
+//       return res.status(400).json({ msg: "Recipe does not exist." });
+//     }
 
-    const oldComment = await pool.query(
-      "SELECT * FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
-      [req.user.id, id]
-    );
+//     const oldComment = await pool.query(
+//       "SELECT * FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
+//       [req.user.user_id, id]
+//     );
 
-    if (oldComment.rows.length === 0) {
-      return res.status(400).json({ msg: "Comment does not exist." });
-    }
+//     if (oldComment.rows.length === 0) {
+//       return res.status(400).json({ msg: "Comment does not exist." });
+//     }
 
-    const updated_at = new Date();
+//     const updated_at = new Date();
 
-    const newComment = await pool.query(
-      "UPDATE user_comments SET comment = $1, updated_at = $2 WHERE user_id = $3 AND recipe_id = $4 RETURNING *",
-      [comment, updated_at, req.user.id, id]
-    );
+//     const newComment = await pool.query(
+//       "UPDATE user_comments SET comment = $1, updated_at = $2 WHERE user_id = $3 AND recipe_id = $4 RETURNING *",
+//       [comment, updated_at, req.user.user_id, id]
+//     );
 
-    res.status(200).json(newComment.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     res.status(200).json(newComment.rows[0]);
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
-// Delete comment
+// // Delete comment
 
-router.delete("/comment/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
+// router.delete("/comment/:id", async (req, res) => {
+//   try {
+//     const { id } = req.params;
 
-    const oldComment = await pool.query(
-      "SELECT * FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
-      [req.user.id, id]
-    );
+//     const oldComment = await pool.query(
+//       "SELECT * FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
+//       [req.user.user_id, id]
+//     );
 
-    if (oldComment.rows.length === 0) {
-      return res.status(400).json({ msg: "Comment does not exist." });
-    }
+//     if (oldComment.rows.length === 0) {
+//       return res.status(400).json({ msg: "Comment does not exist." });
+//     }
 
-    await pool.query(
-      "DELETE FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
-      [req.user.id, id]
-    );
+//     await pool.query(
+//       "DELETE FROM user_comments WHERE user_id = $1 AND recipe_id = $2",
+//       [req.user.user_id, id]
+//     );
 
-    res.status(200).json("Comment was deleted.");
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
+//     res.status(200).json("Comment was deleted.");
+//   } catch (error) {
+//     res.status(500).json({ error: error.message });
+//   }
+// });
 
 module.exports = router;

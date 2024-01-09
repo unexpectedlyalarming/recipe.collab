@@ -4,11 +4,11 @@
   "description": "",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
+    "start": "node start.js",
+    "dev": "nodemon start.js",
     "seed": "npm i && node seedDB.js",
     "setup": "npm i && node InitNoSeed.js",
-    "test": "jest --verbose"
+    "test": "jest --verbose --forceExit"
   },
   "repository": {
     "type": "git",

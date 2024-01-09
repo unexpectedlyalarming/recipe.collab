@@ -69,9 +69,18 @@ router.get("/:id", async (req, res) => {
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { username, email, first_name, last_name, bio } = req.body;
-    if (!username || !email || !first_name || !last_name || !bio) {
-      return res.status(400).json({ msg: "Not all fields have been entered." });
+    const { username, email, first_name, last_name, bio, profile_pic } =
+      req.body;
+    console.log("put request: ", req.body);
+    if (
+      !req.body.username ||
+      !req.body.email ||
+      !req.body.first_name ||
+      !req.body.last_name ||
+      !req.body.bio ||
+      !req.body.profile_pic
+    ) {
+      return res.status(402).json({ msg: "Not all fields have been entered." });
     }
 
     const user = await pool.query("SELECT * FROM USERS WHERE user_id = $1", [
@@ -79,19 +88,30 @@ router.put("/:id", async (req, res) => {
     ]);
 
     if (user.rows.length === 0) {
-      return res.status(400).json({ msg: "User does not exist." });
+      return res.status(404).json({ msg: "User does not exist." });
     }
 
-    if (user.rows[0].user_id !== req.user) {
+    if (user.rows[0].user_id !== req.user.user_id) {
       return res.status(401).json({ msg: "Not authorized." });
     }
 
     const updatedUser = await pool.query(
-      "UPDATE users SET username = $1, email = $2, first_name = $3, last_name = $4, bio = $5 WHERE user_id = $6",
-      [username, email, first_name, last_name, bio, id]
+      "UPDATE users SET username = $1, email = $2, first_name = $3, last_name = $4, bio = $5, profile_pic = $6 WHERE user_id = $7 RETURNING *",
+      [username, email, first_name, last_name, bio, profile_pic, id]
     );
 
-    res.status(200).json("User was updated.");
+    const filteredUser = {
+      username: updatedUser.rows[0].username,
+      email: updatedUser.rows[0].email,
+      first_name: updatedUser.rows[0].first_name,
+      last_name: updatedUser.rows[0].last_name,
+      bio: updatedUser.rows[0].bio,
+      profile_pic: updatedUser.rows[0].profile_pic,
+      user_id: updatedUser.rows[0].user_id,
+      created_at: updatedUser.rows[0].created_at,
+    };
+
+    res.status(200).json(filteredUser);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -101,25 +121,6 @@ router.put("/:id", async (req, res) => {
 
 router.delete("/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-
-    const user = await pool.query("SELECT * FROM users WHERE user_id = $1", [
-      id,
-    ]);
-
-    if (user.rows.length === 0) {
-      return res.status(400).json({ msg: "User does not exist." });
-    }
-
-    if (user.rows[0].user_id !== req.user) {
-      return res.status(401).json({ msg: "Not authorized." });
-    }
-
-    const deletedUser = await pool.query(
-      "DELETE FROM users WHERE user_id = $1",
-      [id]
-    );
-
     res.status(200).json("User was deleted.");
   } catch (error) {
     res.status(500).json({ error: error.message });
