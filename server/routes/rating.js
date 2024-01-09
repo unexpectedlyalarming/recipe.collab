@@ -111,12 +111,3 @@ router.delete("/:recipeId", async (req, res) => {
 });
 
 module.exports = router;
-
-// CREATE TABLE IF NOT EXISTS recipe_ratings (
-//     rating_id SERIAL PRIMARY KEY,
-//     user_id INT REFERENCES users(user_id),
-//     recipe_id INT REFERENCES recipes(recipe_id),
-//     rating INT NOT NULL CHECK (rating >= 1 AND rating <= 5),
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     UNIQUE(user_id, recipe_id)
-// );

@@ -174,20 +174,3 @@ router.delete("/:listId", async (req, res) => {
 });
 
 module.exports = router;
-
-// CREATE TABLE IF NOT EXISTS lists (
-//     list_id SERIAL PRIMARY KEY,
-//     user_id INT REFERENCES users(user_id),
-//     name VARCHAR(50) NOT NULL,
-//     description TEXT,
-//     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-//     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-// );
-
-// CREATE TABLE IF NOT EXISTS list_recipes (
-//     list_recipe_id SERIAL PRIMARY KEY,
-//     list_id INT REFERENCES lists(list_id),
-//     recipe_id INT REFERENCES recipes(recipe_id),
-//     UNIQUE(list_id, recipe_id)
-
-// );

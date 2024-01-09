@@ -175,10 +175,3 @@ router.get("/measurements", async (req, res) => {
 });
 
 module.exports = router;
-
-// CREATE TABLE IF NOT EXISTS user_carts (
-//     cart_id SERIAL PRIMARY KEY,
-//     user_id INT REFERENCES users(user_id),
-//     recipe_id INT REFERENCES recipes(recipe_id),
-//     UNIQUE(user_id, recipe_id)
-// );
