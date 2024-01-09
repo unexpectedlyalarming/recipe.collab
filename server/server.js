@@ -57,8 +57,10 @@ app.use("/user", verifyUser, userRouter);
 const starRouter = require("./routes/star");
 app.use("/star", verifyUser, starRouter);
 
-app.listen(port, () => {
-  console.log(`Server started on port ${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server started on port ${port}`);
+// });
+
+//Needs to move to start.js
 
 module.exports = app;

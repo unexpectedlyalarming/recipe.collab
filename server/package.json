@@ -8,7 +8,7 @@
     "dev": "nodemon server.js",
     "seed": "npm i && node seedDB.js",
     "setup": "npm i && node InitNoSeed.js",
-    "test": "jest --runInBand --detectOpenHandles"
+    "test": "jest --verbose"
   },
   "repository": {
     "type": "git",
