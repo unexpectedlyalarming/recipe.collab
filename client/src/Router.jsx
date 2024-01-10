@@ -9,16 +9,19 @@ import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
+import Loading from "./pages/Loading/Loading";
+import Nav from "./components/Nav/Nav";
+import NotFound from "./pages/404/NotFound";
 
 function Routers() {
-  const [user, setUser] = useState(false);
+  const [user, setUser] = useState("true");
 
   const [loading, setLoading] = useState(false);
 
   const Layout = () => {
     return (
       <>
-        <div>Nav</div>
+        <Nav />
         <Outlet />
       </>
     );
@@ -56,10 +59,14 @@ function Routers() {
       path: "/register",
       element: <Register />,
     },
+    {
+      path: "*",
+      element: <NotFound />,
+    },
   ]);
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Loading />;
   }
 
   const theme = createTheme({
