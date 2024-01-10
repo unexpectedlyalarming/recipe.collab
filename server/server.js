@@ -6,6 +6,7 @@ const PrettyError = require("pretty-error");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
 const session = require("express-session");
+const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
 app.use(morgan("dev"));
@@ -26,6 +27,13 @@ app.use(express.json());
 app.use(cookieParser());
 
 app.use(helmet());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 1000,
+});
+
+app.use(limiter);
 
 app.use(
   session({

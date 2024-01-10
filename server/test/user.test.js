@@ -162,10 +162,3 @@ describe("/star routes", () => {
     });
   });
 });
-
-// // Star/unstar recipe
-// router.post("/:id", async (req, res) => {
-
-//   // Get starred recipes
-
-//   router.get("/user/:userId", async (req, res) => {

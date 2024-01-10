@@ -72,4 +72,19 @@ router.get("/recipe/:recipeId", async (req, res) => {
   }
 });
 
+// Get all users who starred a recipe
+
+router.get("/recipe/:recipeId/users", async (req, res) => {
+  try {
+    const { recipeId } = req.params;
+    const starredRecipes = await pool.query(
+      "SELECT * FROM user_stars WHERE recipe_id = $1",
+      [recipeId]
+    );
+    res.status(200).json(starredRecipes.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

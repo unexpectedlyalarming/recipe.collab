@@ -8,30 +8,46 @@ const bcrypt = require("bcrypt");
 
 const jwt = require("jsonwebtoken");
 
+const rateLimit = require("express-rate-limit");
+
 const secret_key = process.env.SECRET_KEY;
 
-router.post("/register", async (req, res) => {
+const registerLimiter = rateLimit({
+  windowMs: 30 * 60 * 1000, // 30 minutes
+  max: 10,
+});
+
+const loginLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 15,
+});
+
+router.post("/register", registerLimiter, async (req, res) => {
   try {
     const { username, password, email, first_name, last_name, bio } = req.body;
 
-    switch (req.body) {
-      case !username:
-        return res.status(400).json({ msg: "Username is required." });
+    if (!username) {
+      return res.status(400).json({ msg: "Username is required." });
+    }
 
-      case !password:
-        return res.status(400).json({ msg: "Password is required." });
+    if (!password) {
+      return res.status(400).json({ msg: "Password is required." });
+    }
 
-      case !email:
-        return res.status(400).json({ msg: "Email is required." });
+    if (!email) {
+      return res.status(400).json({ msg: "Email is required." });
+    }
 
-      case !first_name:
-        return res.status(400).json({ msg: "First name is required." });
+    if (!first_name) {
+      return res.status(400).json({ msg: "First name is required." });
+    }
 
-      case !last_name:
-        return res.status(400).json({ msg: "Last name is required." });
+    if (!last_name) {
+      return res.status(400).json({ msg: "Last name is required." });
+    }
 
-      case !bio:
-        return res.status(400).json({ msg: "Bio is required." });
+    if (!bio) {
+      return res.status(400).json({ msg: "Bio is required." });
     }
 
     const user = await pool.query("SELECT * FROM users WHERE username = $1", [
@@ -63,7 +79,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", loginLimiter, async (req, res) => {
   try {
     const { username, password } = req.body;
 
