@@ -11,8 +11,8 @@ CREATE TABLE IF NOT EXISTS users (
     bio VARCHAR(200),
     profile_pic VARCHAR(200),
     is_admin BOOLEAN DEFAULT FALSE,
+    last_active TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     is_active BOOLEAN DEFAULT FALSE
-
 );
 
 CREATE TABLE IF NOT EXISTS user_follows (
@@ -31,6 +31,7 @@ CREATE TABLE IF NOT EXISTS recipes (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     image VARCHAR(200),
+    tags text[],
     preparation_time INTERVAL NOT NULL,
     cooking_time INTERVAL NOT NULL,
     servings INT NOT NULL,

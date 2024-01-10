@@ -145,9 +145,9 @@ describe("/star routes", () => {
     expect(response.status).toBe(200);
   });
 
-  describe("POST /star/:id", () => {
+  describe("PUT /star/:id", () => {
     it("should star a recipe", async () => {
-      const response = await request.post(`/star/1`).set("Cookie", accessToken);
+      const response = await request.put(`/star/1`).set("Cookie", accessToken);
       expect(response.status).toBe(200);
     });
   });

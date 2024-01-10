@@ -5,7 +5,7 @@ const router = express.Router();
 const pool = require("../db");
 
 // Star/unstar recipe
-router.post("/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const user_id = req.user.user_id;
@@ -50,6 +50,21 @@ router.get("/user/:userId", async (req, res) => {
     const starredRecipes = await pool.query(
       "SELECT * FROM user_stars WHERE user_id = $1",
       [userId]
+    );
+    res.status(200).json(starredRecipes.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get starred recipes by recipe id
+
+router.get("/recipe/:recipeId", async (req, res) => {
+  try {
+    const { recipeId } = req.params;
+    const starredRecipes = await pool.query(
+      "SELECT * FROM user_stars WHERE recipe_id = $1",
+      [recipeId]
     );
     res.status(200).json(starredRecipes.rows);
   } catch (error) {

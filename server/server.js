@@ -8,11 +8,6 @@ const helmet = require("helmet");
 const session = require("express-session");
 require("dotenv").config();
 
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  next(err);
-});
-
 app.use(morgan("dev"));
 
 const corsOrigin = process.env.CORS_ORIGIN || "*";
@@ -59,5 +54,23 @@ app.use("/user", verifyUser, userRouter);
 
 const starRouter = require("./routes/star");
 app.use("/star", verifyUser, starRouter);
+
+const commentRouter = require("./routes/comment");
+app.use("/comment", verifyUser, commentRouter);
+
+const listRouter = require("./routes/list");
+app.use("/list", verifyUser, listRouter);
+
+const ratingRouter = require("./routes/rating");
+app.use("/rating", verifyUser, ratingRouter);
+
+const cartRouter = require("./routes/cart");
+app.use("/cart", verifyUser, cartRouter);
+
+//User Activity Scheduler
+
+const scheduleUserActivityCheck = require("./utils/userActivityScheduler");
+
+scheduleUserActivityCheck();
 
 module.exports = app;

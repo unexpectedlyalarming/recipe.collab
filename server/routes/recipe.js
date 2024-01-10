@@ -62,18 +62,20 @@ router.post("/", checkValidForm, async (req, res) => {
 
     const user_id = req.user.user_id;
 
+    //Include tags in recipe_tags table and in recipe object
+
     const newRecipe = await pool.query(
-      "INSERT INTO recipes (title, description, user_id, image, tags, preparation_time, cooking_time, servings, difficulty_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+      "INSERT INTO recipes (title, description, user_id, image, preparation_time, cooking_time, servings, difficulty_level, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
       [
         title,
         description,
         user_id,
         image,
-        tags,
         preparation_time,
         cooking_time,
         servings,
         difficulty_level,
+        tags,
       ]
     );
 
@@ -92,6 +94,13 @@ router.post("/", checkValidForm, async (req, res) => {
       const newInstruction = await pool.query(
         "INSERT INTO instructions (recipe_id, step_number, description, image) VALUES ($1, $2, $3, $4) RETURNING *",
         [recipe_id, step_number, description, image]
+      );
+    });
+
+    tags.forEach(async (tag) => {
+      const newTag = await pool.query(
+        "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
+        [recipe_id, tag]
       );
     });
 
@@ -120,9 +129,11 @@ router.post("/", checkValidForm, async (req, res) => {
 
 router.get("/sort/date/:page/:limit", async (req, res) => {
   try {
-    const { page, limit } = req.params;
-    !page ? (page = 1) : page;
-    !limit ? (limit = 20) : limit;
+    let { page, limit } = req.params;
+
+    page = page ? page : 1;
+    limit = limit ? limit : 20;
+
     const offset = (page - 1) * limit;
     const recipes = await pool.query(
       "SELECT * FROM recipes ORDER BY created_at DESC LIMIT $1 OFFSET $2",
@@ -139,6 +150,28 @@ router.get("/sort/date/:page/:limit", async (req, res) => {
 
 router.get("/sort/stars/:page/:limit", async (req, res) => {
   try {
+    let { page, limit } = req.params;
+
+    page = page ? page : 1;
+    limit = limit ? limit : 20;
+
+    const offset = (page - 1) * limit;
+
+    const sortedByStar = await pool.query(
+      "SELECT recipe_id, COUNT(recipe_id) FROM user_stars GROUP BY recipe_id ORDER BY COUNT(recipe_id) DESC LIMIT $1 OFFSET $2",
+      [limit, offset]
+    );
+
+    res.status(200).json(sortedByStar.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get recipes, sort by recipe_ratings, limit and paginate
+
+router.get("/sort/ratings/:page/:limit", async (req, res) => {
+  try {
     const { page, limit } = req.params;
 
     !page ? (page = 1) : page;
@@ -146,12 +179,34 @@ router.get("/sort/stars/:page/:limit", async (req, res) => {
 
     const offset = (page - 1) * limit;
 
-    //Grab all stars, find count of recipe_id, sort by count, limit and paginate
-
-    const sortedByStar = await pool.query(
-      "SELECT recipe_id, COUNT(recipe_id) FROM user_stars GROUP BY recipe_id ORDER BY COUNT(recipe_id) DESC LIMIT $1 OFFSET $2",
+    const sortedByRating = await pool.query(
+      "SELECT recipe_id, COUNT(recipe_id) FROM user_ratings GROUP BY recipe_id ORDER BY COUNT(recipe_id) DESC LIMIT $1 OFFSET $2",
       [limit, offset]
     );
+
+    res.status(200).json(sortedByRating.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get recipes, sort by inputed tag, limit and paginate
+
+router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
+  try {
+    let { page, limit } = req.params;
+
+    page = page ? page : 1;
+    limit = limit ? limit : 20;
+
+    const offset = (page - 1) * limit;
+
+    const recipes = await pool.query(
+      "SELECT * FROM recipes WHERE $1 = ANY (tags) ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+      [tag, limit, offset]
+    );
+
+    res.status(200).json(recipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -257,19 +312,31 @@ router.put("/:id", checkValidForm, async (req, res) => {
 
     const updated_at = new Date();
 
+    const deletedTags = await pool.query(
+      "DELETE FROM recipe_tags WHERE recipe_id = $1",
+      [id]
+    );
+
+    tags.forEach(async (tag) => {
+      const newTag = await pool.query(
+        "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
+        [id, tag]
+      );
+    });
+
     const updatedRecipe = await pool.query(
-      "UPDATE recipes SET title = $1, description = $2, user_id = $3, image = $4, tags = $5, preparation_time = $6, cooking_time = $7, servings = $8, difficulty_level = $9, updated_at = $10 WHERE recipe_id = $11 RETURNING *",
+      "UPDATE recipes SET title = $1, description = $2, user_id = $3, image = $4, tags = $5, preparation_time = $6, cooking_time = $7, servings = $8, difficulty_level = $9, updated_at = $10, tags = $11 WHERE recipe_id = $12 RETURNING *",
       [
         title,
         description,
         user_id,
         image,
-        tags,
         preparation_time,
         cooking_time,
         servings,
         difficulty_level,
         updated_at,
+        tags,
         id,
       ]
     );
@@ -354,15 +421,20 @@ router.post("/fork/:id", async (req, res) => {
       [id]
     );
 
+    const tags = await pool.query(
+      "SELECT * FROM recipe_tags WHERE recipe_id = $1",
+      [id]
+    );
+
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
       title: recipe.rows[0].title,
       description: recipe.rows[0].description,
       user_id: recipe.rows[0].user_id,
       image: recipe.rows[0].image,
-      tags: recipe.rows[0].tags,
       preparation_time: recipe.rows[0].preparation_time,
       cooking_time: recipe.rows[0].cooking_time,
+      tags: recipe.rows[0].tags,
       servings: recipe.rows[0].servings,
       difficulty_level: recipe.rows[0].difficulty_level,
       ingredients: ingredients.rows,
@@ -372,18 +444,24 @@ router.post("/fork/:id", async (req, res) => {
     //Create new recipe and recipe version
 
     const newRecipe = await pool.query(
-      "INSERT INTO recipes (title, description, user_id, image, tags, preparation_time, cooking_time, servings, difficulty_level) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+      "INSERT INTO recipes (title, description, user_id, image, preparation_time, cooking_time, servings, difficulty_level, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
       [
         recipeObject.title,
         recipeObject.description,
         req.user.user_id,
         recipeObject.image,
-        recipeObject.tags,
+
         recipeObject.preparation_time,
         recipeObject.cooking_time,
         recipeObject.servings,
         recipeObject.difficulty_level,
+        recipeObject.tags,
       ]
+    );
+
+    const newRecipeTags = await pool.query(
+      "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
+      [newRecipe.rows[0].recipe_id, tags.rows[0].tag]
     );
 
     //Get old recipe version number (if exists)
@@ -428,6 +506,11 @@ router.delete("/:id", async (req, res) => {
     if (recipe.rows[0].user_id !== req.user.user_id) {
       return res.status(401).json({ msg: "Not authorized." });
     }
+
+    const deletedTags = await pool.query(
+      "DELETE FROM recipe_tags WHERE recipe_id = $1",
+      [id]
+    );
 
     const deletedLists = await pool.query(
       "DELETE FROM list_recipes WHERE recipe_id = $1",
@@ -482,6 +565,45 @@ router.delete("/:id", async (req, res) => {
     }
 
     res.status(200).json("Recipe was deleted.");
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get recipe versions of original recipe
+
+router.get("/versions/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeVersions = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
+      [id]
+    );
+
+    res.status(200).json(recipeVersions.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get count of all tags, sorted by count (desc), limit and paginate. Return count and tag name.
+
+router.get("/tags/:page/:limit", async (req, res) => {
+  try {
+    let { page, limit } = req.params;
+
+    page = page ? page : 1;
+    limit = limit ? limit : 20;
+
+    const offset = (page - 1) * limit;
+
+    const tags = await pool.query(
+      "SELECT tag, COUNT(tag) FROM recipe_tags GROUP BY tag ORDER BY COUNT(tag) DESC LIMIT $1 OFFSET $2",
+      [limit, offset]
+    );
+
+    res.status(200).json(tags.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

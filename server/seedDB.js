@@ -128,8 +128,8 @@ async function seedDB() {
       ]);
 
       const query = `
-                INSERT INTO recipes (title, description, user_id, created_at, updated_at, image, preparation_time, cooking_time, servings, difficulty_level)
-                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING recipe_id
+                INSERT INTO recipes (title, description, user_id, created_at, updated_at, image, preparation_time, cooking_time, servings, difficulty_level, tags)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING recipe_id
             `;
       const values = [
         title,
@@ -138,10 +138,12 @@ async function seedDB() {
         createdAt,
         updatedAt,
         image,
+
         preparationTime,
         cookingTime,
         servings,
         difficultyLevel,
+        tags,
       ];
 
       const result = await client.query(query, values);
@@ -204,11 +206,8 @@ async function seedDB() {
 
       // Seed tags for recipe
 
-      const tagAmount = faker.number.bigInt({ min: 1, max: 5 });
-
-      for (let i = 0; i < tagAmount; i++) {
+      for (let tag of tags) {
         const recipeId = result.rows[0].recipe_id;
-        const tag = faker.lorem.word();
 
         const query = `
                         INSERT INTO recipe_tags (recipe_id, tag)

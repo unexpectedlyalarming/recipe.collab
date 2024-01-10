@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const db = require("../db");
 
 const secret_key = process.env.SECRET_KEY;
 
@@ -18,6 +19,8 @@ async function verifyUser(req, res, next) {
 
     req.user = decoded;
 
+    await updateUserActivity(decoded.user_id);
+
     const currentTime = Date.now() / 1000;
 
     if (decoded.exp - currentTime < 15) {
@@ -33,6 +36,23 @@ async function verifyUser(req, res, next) {
     next();
   } catch (error) {
     res.status(500).json({ error: error.message });
+  }
+}
+
+async function updateUserActivity(userId) {
+  try {
+    const currentTime = new Date();
+    const last_active = await db.query(
+      `UPDATE users SET last_active = $1 WHERE id = $2 RETURNING last_active`,
+      [currentTime, userId]
+    );
+    const is_active = await db.query(
+      `UPDATE users SET is_active = true WHERE id = $1 RETURNING is_active`,
+      [userId]
+    );
+    return "Successfully updated user activity.";
+  } catch (error) {
+    return new Error(error.message);
   }
 }
 
