@@ -35,14 +35,6 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
-app.use(
-  session({
-    secret: sessionSecret,
-    resave: false,
-    saveUninitialized: true,
-  })
-);
-
 const pe = new PrettyError();
 
 pe.start();
