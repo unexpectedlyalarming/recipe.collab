@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const db = require("../db");
+const pool = require("../db");
 
 const secret_key = process.env.SECRET_KEY;
 
@@ -42,12 +42,12 @@ async function verifyUser(req, res, next) {
 async function updateUserActivity(userId) {
   try {
     const currentTime = new Date();
-    const last_active = await db.query(
-      `UPDATE users SET last_active = $1 WHERE id = $2 RETURNING last_active`,
+    const last_active = await pool.query(
+      `UPDATE users SET last_active = $1 WHERE user_id = $2 RETURNING last_active`,
       [currentTime, userId]
     );
-    const is_active = await db.query(
-      `UPDATE users SET is_active = true WHERE id = $1 RETURNING is_active`,
+    const is_active = await pool.query(
+      `UPDATE users SET is_active = true WHERE user_id = $1 RETURNING is_active`,
       [userId]
     );
     return "Successfully updated user activity.";

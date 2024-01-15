@@ -1,7 +1,9 @@
+import SERVER_URL from "../../vars/server_url";
+
 export default function Home() {
   return (
     <>
-      <h1>Vite + React</h1>
+      <h1>Home</h1>
     </>
   );
 }

@@ -1,16 +1,23 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Stack from "@mui/material/Stack";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { Link } from "react-router-dom";
+import useAuth from "../../hooks/useAuth";
+import { useNavigate } from "react-router-dom";
+import Typography from "@mui/material/Typography";
 
 export default function Login() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [formErrors, setFormErrors] = useState(false);
 
-  async function login() {
+  const navigate = useNavigate();
+
+  const { login, success, error } = useAuth();
+
+  async function handleLogin() {
     try {
       if (username.length < 6) {
         setFormErrors({ username: "Username must be at least 6 characters" });
@@ -19,10 +26,19 @@ export default function Login() {
       } else {
         setFormErrors(false);
       }
+
+      await login(username, password);
+      console.log(error);
     } catch (error) {
       console.error(error);
     }
   }
+
+  useEffect(() => {
+    if (success) {
+      navigate("/");
+    }
+  }, [success]);
 
   return (
     <Container>
@@ -47,7 +63,10 @@ export default function Login() {
           helperText={formErrors?.password}
           type="password"
         />
-        <Button onClick={login}>Login</Button>
+        <Typography variant="p" color="error">
+          {error}
+        </Typography>
+        <Button onClick={handleLogin}>Login</Button>
 
         <Button component={Link} to="/register">
           Register

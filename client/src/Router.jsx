@@ -4,7 +4,7 @@ import {
   createBrowserRouter,
   Navigate,
 } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
@@ -12,11 +12,14 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Loading from "./pages/Loading/Loading";
 import Nav from "./components/Nav/Nav";
 import NotFound from "./pages/404/NotFound";
+import useApi from "./hooks/useApi";
+import { UserProvider } from "./contexts/userContext";
+import axios from "axios";
 
 function Routers() {
-  const [user, setUser] = useState("true");
+  const [user, setUser] = useState(null);
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const Layout = () => {
     return (
@@ -28,6 +31,31 @@ function Routers() {
   };
 
   //Check for session here -- todo
+
+  // const {
+  //   data: fetchedUser,
+  //   success,
+  //   request: getSession,
+  // } = useApi({
+  //   url: "/auth/session",
+  // });
+
+  useEffect(() => {
+    async function checkUserSession() {
+      try {
+        const fetchedUser = await axios.get("/auth/session");
+        if (fetchedUser.data) {
+          setUser(fetchedUser.data);
+        } else {
+          setUser(null);
+        }
+        setLoading(false);
+      } catch (error) {
+        console.error(error);
+      }
+    }
+    checkUserSession();
+  }, []);
 
   const AuthorizedRoute = ({ children }) => {
     if (!user) {
@@ -65,20 +93,20 @@ function Routers() {
     },
   ]);
 
-  if (loading) {
-    return <Loading />;
-  }
-
   const theme = createTheme({
     palette: {
       mode: "dark",
     },
   });
 
+  if (loading) return <Loading />;
+
   return (
-    <ThemeProvider theme={theme}>
-      <RouterProvider router={router}></RouterProvider>
-    </ThemeProvider>
+    <UserProvider value={{ user, setUser }}>
+      <ThemeProvider theme={theme}>
+        <RouterProvider router={router}></RouterProvider>
+      </ThemeProvider>
+    </UserProvider>
   );
 }
 

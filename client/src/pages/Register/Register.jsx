@@ -1,14 +1,39 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Stack from "@mui/material/Stack";
 import Container from "@mui/material/Container";
 import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import { Link } from "react-router-dom";
+import useApi from "../../hooks/useApi";
+import { useNavigate } from "react-router-dom";
+import Typography from "@mui/material/Typography";
+import { CircularProgress } from "@mui/material";
 
 export default function Register() {
   const [form, setForm] = useState("");
 
   const [formErrors, setFormErrors] = useState(false);
+
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
+
+  const {
+    data: error,
+    success,
+    loading: requestLoad,
+    request: registerUser,
+  } = useApi({
+    url: "/auth/register",
+    method: "post",
+    body: {
+      username: form.username,
+      password: form.password,
+      email: form.email,
+      first_name: form.firstName,
+      last_name: form.lastName,
+    },
+  });
 
   async function register() {
     try {
@@ -35,11 +60,22 @@ export default function Register() {
         setFormErrors(false);
 
         //todo: api calls
+
+        setLoading(true);
+        await registerUser();
       }
     } catch (error) {
       console.error(error);
+      setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (success) {
+      navigate("/");
+    }
+    setLoading(false);
+  }, [success, error]);
 
   return (
     <Container>
@@ -105,11 +141,23 @@ export default function Register() {
           helperText={formErrors?.lastName}
         />
 
+        <Typography variant="p" color="error">
+          {typeof error === "object" ? null : error}
+        </Typography>
+
         <Button onClick={register}>Register</Button>
 
         <Button component={Link} to="/login">
           Have an account? Login
         </Button>
+        {loading && (
+          <CircularProgress
+            sx={{
+              alignSelf: "center",
+              justifySelf: "center",
+            }}
+          />
+        )}
       </Stack>
     </Container>
   );

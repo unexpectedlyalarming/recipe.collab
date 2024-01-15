@@ -14,12 +14,12 @@ const secret_key = process.env.SECRET_KEY;
 
 const registerLimiter = rateLimit({
   windowMs: 30 * 60 * 1000, // 30 minutes
-  max: 10,
+  max: 100, // change to 10
 });
 
 const loginLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 15,
+  max: 150, //change to 15
 });
 
 router.post("/register", registerLimiter, async (req, res) => {
@@ -27,27 +27,23 @@ router.post("/register", registerLimiter, async (req, res) => {
     const { username, password, email, first_name, last_name, bio } = req.body;
 
     if (!username) {
-      return res.status(400).json({ msg: "Username is required." });
+      return res.status(400).json({ message: "Username is required." });
     }
 
     if (!password) {
-      return res.status(400).json({ msg: "Password is required." });
+      return res.status(400).json({ message: "Password is required." });
     }
 
     if (!email) {
-      return res.status(400).json({ msg: "Email is required." });
+      return res.status(400).json({ message: "Email is required." });
     }
 
     if (!first_name) {
-      return res.status(400).json({ msg: "First name is required." });
+      return res.status(400).json({ message: "First name is required." });
     }
 
     if (!last_name) {
-      return res.status(400).json({ msg: "Last name is required." });
-    }
-
-    if (!bio) {
-      return res.status(400).json({ msg: "Bio is required." });
+      return res.status(400).json({ message: "Last name is required." });
     }
 
     const user = await pool.query("SELECT * FROM users WHERE username = $1", [
@@ -55,7 +51,7 @@ router.post("/register", registerLimiter, async (req, res) => {
     ]);
 
     if (user.rows.length > 0) {
-      return res.status(400).json({ msg: "User already exists." });
+      return res.status(400).json({ message: "User already exists." });
     }
 
     const hash = await bcrypt.hash(password, 10);
@@ -75,7 +71,7 @@ router.post("/register", registerLimiter, async (req, res) => {
 
     res.status(200).json(filteredUser);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ message: error.message });
   }
 });
 
@@ -84,7 +80,9 @@ router.post("/login", loginLimiter, async (req, res) => {
     const { username, password } = req.body;
 
     if (!username || !password) {
-      return res.status(400).json({ msg: "Not all fields have been entered." });
+      return res
+        .status(400)
+        .json({ message: "Not all fields have been entered." });
     }
 
     const user = await pool.query("SELECT * FROM users WHERE username = $1", [
@@ -92,13 +90,13 @@ router.post("/login", loginLimiter, async (req, res) => {
     ]);
 
     if (user.rows.length === 0) {
-      return res.status(400).json({ msg: "User does not exist." });
+      return res.status(400).json({ message: "User does not exist." });
     }
 
     const isMatch = await bcrypt.compare(password, user.rows[0].password);
 
     if (!isMatch) {
-      return res.status(400).json({ msg: "Invalid credentials." });
+      return res.status(400).json({ message: "Invalid credentials." });
     }
 
     const filteredUser = {
@@ -131,7 +129,7 @@ router.get("/logout", async (req, res) => {
   try {
     res.cookie("accessToken", "", { maxAge: 1, httpOnly: true });
     req.user = null;
-    res.status(200).json({ msg: "Logged out." });
+    res.status(200).json({ message: "Logged out." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
