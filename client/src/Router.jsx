@@ -15,6 +15,9 @@ import NotFound from "./pages/404/NotFound";
 import useApi from "./hooks/useApi";
 import { UserProvider } from "./contexts/userContext";
 import axios from "axios";
+import RecipePage from "./pages/Recipe/RecipePage";
+import SERVER_URL from "./vars/server_url";
+import theme from "./theme";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -43,7 +46,7 @@ function Routers() {
   useEffect(() => {
     async function checkUserSession() {
       try {
-        const fetchedUser = await axios.get("/auth/session");
+        const fetchedUser = await axios.get(SERVER_URL + "/auth/session");
         if (fetchedUser.data) {
           setUser(fetchedUser.data);
         } else {
@@ -51,7 +54,8 @@ function Routers() {
         }
         setLoading(false);
       } catch (error) {
-        console.error(error);
+        setUser(null);
+        setLoading(false);
       }
     }
     checkUserSession();
@@ -77,6 +81,10 @@ function Routers() {
           path: "/",
           element: <Home />,
         },
+        {
+          path: "/recipe/:id",
+          element: <RecipePage />,
+        },
       ],
     },
     {
@@ -92,12 +100,6 @@ function Routers() {
       element: <NotFound />,
     },
   ]);
-
-  const theme = createTheme({
-    palette: {
-      mode: "dark",
-    },
-  });
 
   if (loading) return <Loading />;
 

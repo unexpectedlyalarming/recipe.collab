@@ -5,7 +5,6 @@ const router = express.Router();
 const pool = require("../db");
 
 const addView = require("../utils/addView");
-const { get } = require("mongoose");
 //Client side object protoype:
 
 // {
@@ -344,6 +343,13 @@ router.get("/:id", addView, async (req, res) => {
       [id]
     );
 
+    const views = await pool.query(
+      "SELECT * FROM recipe_views WHERE recipe_id = $1",
+      [id]
+    );
+
+    const average = await getAverageRatingByRecipeId(id);
+
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
       title: recipe.rows[0].title,
@@ -365,6 +371,8 @@ router.get("/:id", addView, async (req, res) => {
       instructions: instructions.rows,
       stars: stars.rows,
       comments: comments.rows,
+      views: views.rows,
+      rating: average,
     };
 
     res.status(200).json(recipeObject);

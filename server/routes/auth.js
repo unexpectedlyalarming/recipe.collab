@@ -141,9 +141,6 @@ const verifyUser = require("../utils/authUtils");
 
 router.get("/session", verifyUser, async (req, res) => {
   try {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized." });
-    }
     res.status(200).json(req.user);
   } catch (error) {
     res.status(500).json({ error: error.message });

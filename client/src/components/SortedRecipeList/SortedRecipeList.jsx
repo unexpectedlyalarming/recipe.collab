@@ -6,7 +6,7 @@ import { useEffect } from "react";
 import Typography from "@mui/material/Typography";
 
 export default function SortedRecipeList({ sortMethod, sortOption = null }) {
-  let { page, limit } = sortOption || { page: 1, limit: 15 };
+  let { page, limit } = sortOption || { page: 1, limit: 10 };
 
   const {
     data: recipes,

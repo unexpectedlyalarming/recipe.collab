@@ -3,8 +3,14 @@ const pool = require("../db");
 async function addView(req, res, next) {
   try {
     const { id } = req.params;
-    const { user_id } = req.body;
+    const user_id = req.user.user_id;
 
+    if (!id) {
+      next();
+    }
+    if (!user_id) {
+      next();
+    }
     const recipe = await pool.query(
       "SELECT * FROM recipes WHERE recipe_id = $1",
       [id]
@@ -14,13 +20,13 @@ async function addView(req, res, next) {
     }
 
     const viewedRecipe = await pool.query(
-      "SELECT * FROM user_views WHERE recipe_id = $1 AND user_id = $2",
+      "SELECT * FROM recipe_views WHERE recipe_id = $1 AND user_id = $2",
       [id, user_id]
     );
 
     if (viewedRecipe.rows.length === 0) {
       await pool.query(
-        "INSERT INTO user_views (recipe_id, user_id) VALUES ($1, $2)",
+        "INSERT INTO recipe_views (recipe_id, user_id) VALUES ($1, $2)",
         [id, user_id]
       );
     }

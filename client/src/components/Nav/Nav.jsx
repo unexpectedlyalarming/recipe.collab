@@ -15,7 +15,7 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
 
-const pages = ["Home", "Discover", "Categories", "Cart"];
+const pages = ["Home", "Categories", "Cart"];
 const settings = ["Profile", "Lists", "My Recipes", "Logout"];
 export default function Nav() {
   const [anchorElNav, setAnchorElNav] = useState(null);

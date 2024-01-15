@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import Typography from "@mui/material/Typography";
 import StarIcon from "@mui/icons-material/Star";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -12,35 +12,64 @@ import {
   CardHeader,
 } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
+import { useNavigate } from "react-router-dom";
+
+import CardActionArea from "@mui/material/CardActionArea";
 
 export default function RecipeCard({ recipe }) {
+  const navigate = useNavigate();
+
+  const [starred, setStarred] = useState(false);
+
+  async function handleStar() {
+    try {
+      console.log("starred");
+    } catch (error) {
+      console.error(error);
+    }
+  }
   return (
     <Card>
-      <CardHeader title={recipe?.title} subheader={recipe?.created_at} />
-      <Link to={`/recipes/${recipe?.recipe_id}`}>
+      <CardActionArea component={Link} to={`/recipe/${recipe?.recipe_id}`}>
+        <CardHeader title={recipe?.title} subheader={recipe?.created_at} />
         <CardMedia
           component="img"
-          height="140"
+          height="194"
           image={recipe?.image}
           alt={recipe?.title}
+          sx={{
+            height: "20rem",
+          }}
         />
         <CardContent>
           <Typography variant="body2" color="text.secondary">
             {recipe?.description}
           </Typography>
         </CardContent>
-      </Link>
+      </CardActionArea>
       <CardActions disableSpacing>
-        <IconButton>
-          <StarIcon />
+        <IconButton onClick={handleStar}>
+          <StarIcon
+            sx={{
+              color: starred ? "yellow" : "white",
+            }}
+          />
           {recipe?.stars?.length}
         </IconButton>
-        <IconButton>
+        <IconButton
+          onClick={() => {
+            navigate(`/recipe/${recipe?.recipe_id}`);
+          }}
+        >
           <CommentIcon />
           {recipe?.comments?.length}
         </IconButton>
         <IconButton>
-          <VisibilityIcon />
+          <VisibilityIcon
+            onClick={() => {
+              navigate(`/recipe/${recipe?.recipe_id}`);
+            }}
+          />
           {recipe?.views?.length}
         </IconButton>
       </CardActions>

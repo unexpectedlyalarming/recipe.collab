@@ -113,8 +113,8 @@ CREATE TABLE IF NOT EXISTS user_carts (
 
 CREATE TABLE IF NOT EXISTS recipe_views (
     view_id SERIAL PRIMARY KEY,
-    user_id INT REFERENCES users(user_id),
-    recipe_id INT REFERENCES recipes(recipe_id),
+    user_id INT REFERENCES users(user_id) NOT NULL,
+    recipe_id INT REFERENCES recipes(recipe_id) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, recipe_id)
 );

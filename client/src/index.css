@@ -8,3 +8,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+header {
+  margin-bottom: 2rem;
+}
