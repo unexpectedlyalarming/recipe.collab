@@ -24,6 +24,15 @@ router.get("/recipe/:id", async (req, res) => {
       "SELECT * FROM user_comments WHERE recipe_id = $1",
       [id]
     );
+
+    for (let comment of comments.rows) {
+      let usernames = await pool.query(
+        "SELECT username FROM users WHERE user_id = $1",
+        [comment.user_id]
+      );
+      let username = usernames.rows[0].username;
+      comment.username = username;
+    }
     res.status(200).json(comments.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -48,7 +57,7 @@ router.get("/user/:id", async (req, res) => {
 // Create comment
 
 //Recipe ID
-router.post("/comment/:id", async (req, res) => {
+router.post("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { comment, reply_to } = req.body;
@@ -82,7 +91,7 @@ router.post("/comment/:id", async (req, res) => {
 
 // Edit comment
 //Comment ID
-router.put("/comment/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const { comment } = req.body;
@@ -120,7 +129,7 @@ router.put("/comment/:id", async (req, res) => {
 
 // Delete comment
 
-router.delete("/comment/:id", async (req, res) => {
+router.delete("/:id", async (req, res) => {
   try {
     const { id } = req.params;
 

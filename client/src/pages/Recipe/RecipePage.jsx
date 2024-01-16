@@ -1,3 +1,4 @@
+import Comments from "../../components/Comments/Comments";
 import FullRecipe from "../../components/FullRecipe/FullRecipe";
 import { useParams } from "react-router-dom";
 export default function RecipePage() {
@@ -5,6 +6,7 @@ export default function RecipePage() {
   return (
     <>
       <FullRecipe id={id} />
+      <Comments id={id} />
     </>
   );
 }

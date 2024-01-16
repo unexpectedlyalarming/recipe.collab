@@ -31,7 +31,10 @@ export default function RecipeCard({ recipe }) {
   return (
     <Card>
       <CardActionArea component={Link} to={`/recipe/${recipe?.recipe_id}`}>
-        <CardHeader title={recipe?.title} subheader={recipe?.created_at} />
+        <CardHeader
+          title={recipe?.title}
+          subheader={recipe?.created_at.split("T", 1)}
+        />
         <CardMedia
           component="img"
           height="194"
@@ -64,12 +67,12 @@ export default function RecipeCard({ recipe }) {
           <CommentIcon />
           {recipe?.comments?.length}
         </IconButton>
-        <IconButton>
-          <VisibilityIcon
-            onClick={() => {
-              navigate(`/recipe/${recipe?.recipe_id}`);
-            }}
-          />
+        <IconButton
+          onClick={() => {
+            navigate(`/recipe/${recipe?.recipe_id}`);
+          }}
+        >
+          <VisibilityIcon />
           {recipe?.views?.length}
         </IconButton>
       </CardActions>

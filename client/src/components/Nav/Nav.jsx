@@ -14,12 +14,16 @@ import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 import AdbIcon from "@mui/icons-material/Adb";
+import { useContext } from "react";
+import { UserContext } from "../../contexts/userContext";
 
 const pages = ["Home", "Categories", "Cart"];
 const settings = ["Profile", "Lists", "My Recipes", "Logout"];
 export default function Nav() {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
+
+  const { user } = useContext(UserContext);
 
   const handleOpenNavMenu = (e) => {
     setAnchorElNav(e.currentTarget);
@@ -129,7 +133,14 @@ export default function Nav() {
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
                 {/* Avatar goes here */}
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/2.jpg" />
+                {user?.profile_pic ? (
+                  <Avatar alt={user.username} src={user.profile_pic} />
+                ) : (
+                  <Avatar
+                    alt={user.username}
+                    src="/static/images/avatar/2.jpg"
+                  />
+                )}
               </IconButton>
             </Tooltip>
             <Menu
