@@ -97,12 +97,14 @@ router.post("/", checkValidForm, async (req, res) => {
       );
     });
 
-    tags.forEach(async (tag) => {
-      const newTag = await pool.query(
-        "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
-        [recipe_id, tag]
-      );
-    });
+    if (tags) {
+      tags.forEach(async (tag) => {
+        const newTag = await pool.query(
+          "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
+          [recipe_id, tag]
+        );
+      });
+    }
 
     const newRecipeObject = {
       recipe_id: newRecipe.rows[0].recipe_id,

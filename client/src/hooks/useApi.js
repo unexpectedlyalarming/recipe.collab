@@ -35,12 +35,13 @@ export default function useApi({
   method = "get",
   body = null,
 }) {
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [data, setData] = useState(null);
   const [success, setSuccess] = useState(false);
 
   async function request(optionalData = null) {
     try {
+      setLoading(true);
       const response = await axios[method](
         SERVER_URL + url,
         optionalData ? optionalData : body,

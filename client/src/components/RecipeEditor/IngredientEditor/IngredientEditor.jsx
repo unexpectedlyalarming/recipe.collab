@@ -37,6 +37,7 @@ export default function IngredientEditor({
     "milliliter",
     "milligram",
     "pinch",
+    "item",
   ].sort();
 
   const [ingredients, setIngredients] = useState(

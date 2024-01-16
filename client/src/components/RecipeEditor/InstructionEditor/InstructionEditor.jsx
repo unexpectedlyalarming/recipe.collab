@@ -58,7 +58,7 @@ export default function InstructionEditor({
 
   return (
     <Stack spacing={2}>
-      <Typography variant="h4">Instructions</Typography>
+      <Typography variant="h5">Instructions</Typography>
       <TableContainer>
         <Table>
           <TableHead>

@@ -94,7 +94,7 @@ export default function FullRecipe({ id }) {
         <Typography variant="p" color="gray">
           {recipe?.created_at.split("T")[0]}
         </Typography>
-        <img src={recipe?.image} alt={recipe?.title} />
+        {recipe?.image && <Image src={recipe?.image} alt={recipe?.title} />}
 
         <Typography variant="h5">{recipe?.description}</Typography>
 

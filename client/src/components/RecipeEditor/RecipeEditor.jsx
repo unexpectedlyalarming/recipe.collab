@@ -3,7 +3,7 @@ import Container from "@mui/material/Container";
 import Divider from "@mui/material/Divider";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
-
+import { useNavigate } from "react-router-dom";
 import { Select } from "@mui/material";
 import MenuItem from "@mui/material/MenuItem";
 import InputLabel from "@mui/material/InputLabel";
@@ -14,6 +14,7 @@ import IngredientEditor from "./IngredientEditor/IngredientEditor";
 import InstructionEditor from "./InstructionEditor/InstructionEditor";
 import { FormHelperText } from "@mui/material";
 export default function RecipeEditor({ inputRecipe }) {
+  const navigate = useNavigate();
   const [recipe, setRecipe] = useState(
     inputRecipe
       ? inputRecipe
@@ -35,6 +36,8 @@ export default function RecipeEditor({ inputRecipe }) {
   const [ingredients, setIngredients] = useState();
   const [instructions, setInstructions] = useState();
 
+  const [formattedRecipe, setFormattedRecipe] = useState();
+
   const [formErrors, setFormErrors] = useState({
     name: false,
     description: false,
@@ -48,26 +51,24 @@ export default function RecipeEditor({ inputRecipe }) {
 
   if (inputRecipe) {
     setRecipe(inputRecipe);
-    setIngredients(inputRecipe.ingredients);
-    setInstructions(inputRecipe.instructions);
+    setIngredients(inputRecipe?.ingredients);
+    setInstructions(inputRecipe?.instructions);
   }
 
-  function convertFormTimeToInterval(time, type) {
-    const hours = time.hours;
-    const minutes = time.minutes;
+  async function convertFormTimeToInterval(time) {
+    try {
+      const hours = time.hours;
+      const minutes = time.minutes;
+      if (!hours) {
+        return `${minutes} minutes`;
+      }
+      if (!minutes) {
+        return `${hours} hours`;
+      }
 
-    if (type == "prep") {
-      const preparation_time = {
-        minutes: minutes,
-        hours: hours,
-      };
-      return preparation_time;
-    } else if (type == "cook") {
-      const cooking_time = {
-        minutes: minutes,
-        hours: hours,
-      };
-      return cooking_time;
+      return `${hours} hours ${minutes} minutes`;
+    } catch (error) {
+      console.error(error);
     }
   }
 
@@ -78,6 +79,17 @@ export default function RecipeEditor({ inputRecipe }) {
   function updateInstructions(instructions) {
     setInstructions(instructions);
   }
+
+  const {
+    data: newRecipe,
+    loading: newRecipeLoading,
+    request: sendRecipeRequest,
+    success,
+  } = useApi({
+    url: "/recipe",
+    method: "post",
+    body: formattedRecipe,
+  });
 
   async function formatAndSendRecipe() {
     try {
@@ -111,24 +123,37 @@ export default function RecipeEditor({ inputRecipe }) {
       if (Object.keys(errors).length > 0) {
         setFormErrors(errors);
         return;
+      } else {
+        setFormErrors({});
       }
 
       const formattedRecipe = {
-        name: recipe.name,
+        title: recipe.name,
         description: recipe.description,
-        prepTime: convertFormTimeToInterval(recipe.prepTime, "prep"),
-        cookTime: convertFormTimeToInterval(recipe.cookTime, "cook"),
+        preparation_time: await convertFormTimeToInterval(recipe.prepTime),
+        cooking_time: await convertFormTimeToInterval(recipe.cookTime),
         servings: recipe.servings,
-        difficulty: recipe.difficulty,
+        difficulty_level: recipe.difficulty,
         ingredients: ingredients,
         instructions: instructions,
       };
 
+      setFormattedRecipe(formattedRecipe);
       console.log(formattedRecipe);
+
+      // Todo: send recipe, support image upload, add loading indicator
+
+      await sendRecipeRequest();
     } catch (error) {
       console.error(error);
     }
   }
+
+  useEffect(() => {
+    if (success) {
+      navigate(`/recipe/${newRecipe.recipe_id}`);
+    }
+  }, [success]);
 
   return (
     <Container>
@@ -246,21 +271,36 @@ export default function RecipeEditor({ inputRecipe }) {
         </Select>
       </Stack>
 
-      <Divider />
+      <Divider
+        sx={{
+          marginBottom: "1rem",
+          marginTop: "1rem",
+        }}
+      />
 
       <IngredientEditor
         inputIngredients={ingredients}
         updateParentIngredients={updateIngredients}
       />
 
-      <Divider />
+      <Divider
+        sx={{
+          marginBottom: "1rem",
+          marginTop: "1rem",
+        }}
+      />
 
       <InstructionEditor
         inputInstructions={instructions}
         updateParentInstructions={updateInstructions}
       />
 
-      <Divider />
+      <Divider
+        sx={{
+          marginBottom: "1rem",
+          marginTop: "1rem",
+        }}
+      />
       <Button
         variant="contained"
         color="primary"
@@ -275,6 +315,7 @@ export default function RecipeEditor({ inputRecipe }) {
       >
         Submit
       </Button>
+      {newRecipeLoading && <CircularProgress />}
     </Container>
   );
 }
