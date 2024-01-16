@@ -54,7 +54,7 @@ export default function IngredientEditor({
       currentIngredient.unit = pluralize(currentIngredient.unit);
     }
     currentIngredient.name = _.capitalize(currentIngredient.name);
-
+    currentIngredient.quantity = Number(currentIngredient.quantity);
     setIngredients([...ingredients, currentIngredient]);
     setCurrentIngredient({
       name: "",
@@ -127,6 +127,7 @@ export default function IngredientEditor({
                   label="Quantity"
                   value={currentIngredient.quantity}
                   required
+                  type="number"
                   onChange={(e) =>
                     setCurrentIngredient({
                       ...currentIngredient,

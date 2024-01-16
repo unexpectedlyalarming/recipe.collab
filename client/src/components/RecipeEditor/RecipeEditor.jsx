@@ -12,7 +12,7 @@ import { CircularProgress } from "@mui/material";
 import useApi from "../../hooks/useApi";
 import IngredientEditor from "./IngredientEditor/IngredientEditor";
 import InstructionEditor from "./InstructionEditor/InstructionEditor";
-
+import { FormHelperText } from "@mui/material";
 export default function RecipeEditor({ inputRecipe }) {
   const [recipe, setRecipe] = useState(
     inputRecipe
@@ -81,6 +81,38 @@ export default function RecipeEditor({ inputRecipe }) {
 
   async function formatAndSendRecipe() {
     try {
+      let errors = {};
+
+      if (!recipe.name) {
+        errors.name = "Name is required";
+      }
+      if (!recipe.description) {
+        errors.description = "Description is required";
+      }
+      if (!recipe.prepTime.hours && !recipe.prepTime.minutes) {
+        errors.prepTime = "Prep time is required";
+      }
+      if (!recipe.cookTime.hours && !recipe.cookTime.minutes) {
+        errors.cookTime = "Cook time is required";
+      }
+      if (!recipe.servings) {
+        errors.servings = "Servings are required";
+      }
+      if (!recipe.difficulty) {
+        errors.difficulty = "Difficulty is required";
+      }
+      if (!ingredients.length) {
+        errors.ingredients = "Ingredients are required";
+      }
+      if (!instructions.length) {
+        errors.instructions = "Instructions are required";
+      }
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
+        return;
+      }
+
       const formattedRecipe = {
         name: recipe.name,
         description: recipe.description,
@@ -109,7 +141,7 @@ export default function RecipeEditor({ inputRecipe }) {
           value={recipe.name}
           required
           onChange={(e) => setRecipe({ ...recipe, name: e.target.value })}
-          error={formErrors.name}
+          error={!!formErrors.name}
           helperText={formErrors.name}
         />
         <TextField
@@ -122,7 +154,7 @@ export default function RecipeEditor({ inputRecipe }) {
           onChange={(e) =>
             setRecipe({ ...recipe, description: e.target.value })
           }
-          error={formErrors.description}
+          error={!!formErrors.description}
           helperText={formErrors.description}
         />
         <InputLabel id="prep-time-label">Prep Time*</InputLabel>
@@ -150,7 +182,7 @@ export default function RecipeEditor({ inputRecipe }) {
                 prepTime: { ...recipe.prepTime, minutes: e.target.value },
               })
             }
-            error={formErrors.prepTime}
+            error={!!formErrors.prepTime}
             helperText={formErrors.prepTime}
           />
         </Stack>
@@ -182,7 +214,7 @@ export default function RecipeEditor({ inputRecipe }) {
                 cookTime: { ...recipe.cookTime, minutes: e.target.value },
               })
             }
-            error={formErrors.cookTime}
+            error={!!formErrors.cookTime}
             helperText={formErrors.cookTime}
           />
         </Stack>
@@ -194,10 +226,10 @@ export default function RecipeEditor({ inputRecipe }) {
           value={recipe.servings}
           required
           onChange={(e) => setRecipe({ ...recipe, servings: e.target.value })}
-          error={formErrors.servings}
+          error={!!formErrors.servings}
           helperText={formErrors.servings}
         />
-        <InputLabel id="difficulty-label">Difficulty</InputLabel>
+        <InputLabel id="difficulty-label">Difficulty*</InputLabel>
 
         <Select
           id="outlined-multiline-flexible"
@@ -205,9 +237,8 @@ export default function RecipeEditor({ inputRecipe }) {
           value={recipe.difficulty}
           required
           onChange={(e) => setRecipe({ ...recipe, difficulty: e.target.value })}
-          error={formErrors.difficulty}
-          helperText={formErrors.difficulty}
         >
+          <FormHelperText>{formErrors.difficulty}</FormHelperText>
           <MenuItem value="easy">Easy</MenuItem>
           <MenuItem value="medium">Medium</MenuItem>
           <MenuItem value="hard">Hard</MenuItem>
