@@ -13,6 +13,9 @@ import useApi from "../../hooks/useApi";
 import IngredientEditor from "./IngredientEditor/IngredientEditor";
 import InstructionEditor from "./InstructionEditor/InstructionEditor";
 import { FormHelperText } from "@mui/material";
+import { set } from "lodash";
+import TagEditor from "./TagEditor/TagEditor";
+
 export default function RecipeEditor({ inputRecipe }) {
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState(
@@ -35,6 +38,7 @@ export default function RecipeEditor({ inputRecipe }) {
   );
   const [ingredients, setIngredients] = useState();
   const [instructions, setInstructions] = useState();
+  const [tags, setTags] = useState();
 
   const [formattedRecipe, setFormattedRecipe] = useState();
 
@@ -53,6 +57,7 @@ export default function RecipeEditor({ inputRecipe }) {
     setRecipe(inputRecipe);
     setIngredients(inputRecipe?.ingredients);
     setInstructions(inputRecipe?.instructions);
+    setTags(inputRecipe?.tags);
   }
 
   async function convertFormTimeToInterval(time) {
@@ -78,6 +83,11 @@ export default function RecipeEditor({ inputRecipe }) {
 
   function updateInstructions(instructions) {
     setInstructions(instructions);
+  }
+
+  function updateTags(tags) {
+    setTags(tags);
+    console.log(tags);
   }
 
   const {
@@ -136,6 +146,7 @@ export default function RecipeEditor({ inputRecipe }) {
         difficulty_level: recipe.difficulty,
         ingredients: ingredients,
         instructions: instructions,
+        tags: tags,
       };
 
       setFormattedRecipe(formattedRecipe);
@@ -270,6 +281,15 @@ export default function RecipeEditor({ inputRecipe }) {
           <MenuItem value="expert">Expert</MenuItem>
         </Select>
       </Stack>
+
+      <Divider
+        sx={{
+          marginBottom: "1rem",
+          marginTop: "1rem",
+        }}
+      />
+
+      <TagEditor inputTags={tags} setParentTags={updateTags} />
 
       <Divider
         sx={{

@@ -5,6 +5,8 @@ const router = express.Router();
 const pool = require("../db");
 
 const addView = require("../utils/addView");
+
+const rateLimit = require("express-rate-limit");
 //Client side object protoype:
 
 // {
@@ -43,9 +45,14 @@ const addView = require("../utils/addView");
 //     ]
 // }
 
+const creationLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 3,
+});
+
 // Create recipe
 
-router.post("/", checkValidForm, async (req, res) => {
+router.post("/", checkValidForm, creationLimiter, async (req, res) => {
   try {
     const {
       title,
@@ -696,19 +703,27 @@ router.get("/versions/:id", async (req, res) => {
 
 // Get count of all tags, sorted by count (desc), limit and paginate. Return count and tag name.
 
-router.get("/tags/:page/:limit", async (req, res) => {
+router.get("/tags/:page/:limit/:query?", async (req, res) => {
   try {
-    let { page, limit } = req.params;
+    let { page, limit, query } = req.params;
 
     page = page ? page : 1;
     limit = limit ? limit : 20;
 
     const offset = (page - 1) * limit;
 
-    const tags = await pool.query(
-      "SELECT tag, COUNT(tag) FROM recipe_tags GROUP BY tag ORDER BY COUNT(tag) DESC LIMIT $1 OFFSET $2",
-      [limit, offset]
-    );
+    let tags;
+    if (query) {
+      tags = await pool.query(
+        "SELECT tag, COUNT(tag) FROM recipe_tags WHERE tag LIKE $1 GROUP BY tag ORDER BY COUNT(tag) DESC LIMIT $2 OFFSET $3",
+        [`%${query}%`, limit, offset]
+      );
+    } else {
+      tags = await pool.query(
+        "SELECT tag, COUNT(tag) FROM recipe_tags GROUP BY tag ORDER BY COUNT(tag) DESC LIMIT $1 OFFSET $2",
+        [limit, offset]
+      );
+    }
 
     res.status(200).json(tags.rows);
   } catch (error) {

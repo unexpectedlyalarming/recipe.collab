@@ -19,6 +19,7 @@ import Loading from "../../pages/Loading/Loading";
 import Image from "mui-image";
 import useApi from "../../hooks/useApi";
 import { useEffect } from "react";
+import Chip from "@mui/material/Chip";
 
 export default function FullRecipe({ id }) {
   const {
@@ -87,6 +88,20 @@ export default function FullRecipe({ id }) {
     return <Loading />;
   }
 
+  const tags = recipe?.tags?.map((tag) => {
+    return (
+      <Chip
+        key={tag}
+        label={tag}
+        color="secondary"
+        sx={{
+          fontSize: "1rem",
+          fontWeight: "bold",
+        }}
+      />
+    );
+  });
+
   return (
     <Container>
       <Stack spacing={2}>
@@ -95,7 +110,9 @@ export default function FullRecipe({ id }) {
           {recipe?.created_at.split("T")[0]}
         </Typography>
         {recipe?.image && <Image src={recipe?.image} alt={recipe?.title} />}
-
+        <Stack direction="row" spacing={2}>
+          {tags}
+        </Stack>
         <Typography variant="h5">{recipe?.description}</Typography>
 
         <Stack direction="row" spacing={2}>

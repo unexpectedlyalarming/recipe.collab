@@ -7,14 +7,14 @@ function scheduleUserActivityCheck() {
       const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
 
       const users = await pool.query(
-        `SELECT id FROM users WHERE last_active < $1 AND is_active = true`,
+        `SELECT user_id FROM users WHERE last_active < $1 AND is_active = true`,
         [fiveMinutesAgo]
       );
 
       for (let user of users.rows) {
         await pool.query(
-          `UPDATE users SET is_active = false WHERE id = $1 RETURNING is_active`,
-          [user.id]
+          `UPDATE users SET is_active = false WHERE user_id = $1 RETURNING is_active`,
+          [user.user_id]
         );
       }
     } catch (error) {
