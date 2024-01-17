@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import IconButton from "@mui/material/IconButton";
 import { useNavigate } from "react-router-dom";
+import Chip from "@mui/material/Chip";
 
 import CardActionArea from "@mui/material/CardActionArea";
 
@@ -75,6 +76,19 @@ export default function RecipeCard({ recipe }) {
           <VisibilityIcon />
           {recipe?.views?.length}
         </IconButton>
+        <Chip color="secondary" label={recipe?.difficulty_level} />
+      </CardActions>
+      <CardActions>
+        {recipe?.tags?.map((tag) => (
+          <Chip
+            key={tag}
+            label={tag}
+            color="primary"
+            onClick={() => {
+              navigate(`/search/${tag}`);
+            }}
+          />
+        ))}
       </CardActions>
     </Card>
   );

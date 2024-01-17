@@ -60,7 +60,12 @@ async function seedDB() {
 
     // Seed users
 
-    const userCount = 70;
+    /* 
+    I set this number arbitrarily. Everything will auto
+    adjust if you change this to whatever you want.
+
+    */
+    const userCount = 450;
 
     for (let i = 0; i < userCount; i++) {
       const password = faker.internet
@@ -107,7 +112,7 @@ async function seedDB() {
 
     // Seed recipes
 
-    const recipeCount = 30;
+    const recipeCount = userCount * 0.4;
 
     for (let i = 0; i < recipeCount; i++) {
       const title = faker.lorem.words(3);
@@ -238,11 +243,21 @@ async function seedDB() {
 
     // Seed user_stars
 
-    const userStarCount = recipeCount * 0.6;
+    const userStarCount = userCount * 1.2;
+
+    let previousStars = [];
 
     for (let i = 0; i < userStarCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
       const recipeId = faker.helpers.arrayElement(recipe_ids);
+
+      // Prevent duplicate stars
+
+      if (previousStars.includes(`${userId}-${recipeId}`)) {
+        continue;
+      }
+
+      previousStars.push(`${userId}-${recipeId}`);
 
       const query = `
                         INSERT INTO user_stars (user_id, recipe_id)
@@ -257,7 +272,7 @@ async function seedDB() {
 
     let comment_ids = [];
 
-    const userCommentCount = recipeCount * 0.6;
+    const userCommentCount = userCount * 0.5;
 
     for (let i = 0; i < userCommentCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
@@ -349,7 +364,7 @@ async function seedDB() {
 
     // Seed recipe_views
 
-    const recipeViewCount = userCount * 0.9;
+    const recipeViewCount = userCount * 2;
 
     let previousViews = [];
     let viewCount = 0;
@@ -377,13 +392,23 @@ async function seedDB() {
 
     // Seed recipe_ratings
 
-    const recipeRatingCount = recipeCount * 0.6;
+    const recipeRatingCount = userCount * 0.4;
+
+    let previousRatings = [];
 
     for (let i = 0; i < recipeRatingCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
       const recipeId = faker.helpers.arrayElement(recipe_ids);
       const rating = faker.number.bigInt({ min: 1, max: 5 });
       const createdAt = faker.date.past();
+
+      // Prevent duplicate ratings
+
+      if (previousRatings.includes(`${userId}-${recipeId}`)) {
+        continue;
+      }
+
+      previousRatings.push(`${userId}-${recipeId}`);
 
       const query = `
       INSERT INTO recipe_ratings (user_id, recipe_id, rating, created_at)
