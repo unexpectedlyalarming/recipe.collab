@@ -34,7 +34,7 @@ export default function RecipeCard({ recipe }) {
       <CardActionArea component={Link} to={`/recipe/${recipe?.recipe_id}`}>
         <CardHeader
           title={recipe?.title}
-          subheader={recipe?.created_at.split("T", 1)}
+          subheader={recipe?.created_at?.split("T", 1)}
         />
         <CardMedia
           component="img"

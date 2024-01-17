@@ -236,7 +236,7 @@ router.get("/sort/stars/:page/:limit", async (req, res) => {
 
 // Get recipes, sort by recipe_ratings, limit and paginate
 
-router.get("/sort/ratings/:page/:limit", async (req, res) => {
+router.get("/sort/rating/:page/:limit", async (req, res) => {
   try {
     const { page, limit } = req.params;
 
@@ -246,11 +246,21 @@ router.get("/sort/ratings/:page/:limit", async (req, res) => {
     const offset = (page - 1) * limit;
 
     const sortedByRating = await pool.query(
-      "SELECT recipe_id, AVG(rating) FROM user_ratings GROUP BY recipe_id ORDER BY AVG(rating) DESC LIMIT $1 OFFSET $2",
+      "SELECT recipe_id, AVG(rating) FROM recipe_ratings GROUP BY recipe_id ORDER BY AVG(rating) DESC LIMIT $1 OFFSET $2",
       [limit, offset]
     );
 
+    let recipes = [];
+
     for (let recipe of sortedByRating.rows) {
+      let newRecipe = await pool.query(
+        "SELECT * FROM recipes WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      recipes.push(newRecipe.rows[0]);
+    }
+
+    for (let recipe of recipes) {
       const stars = await pool.query(
         "SELECT * FROM user_stars WHERE recipe_id = $1",
         [recipe.recipe_id]
@@ -271,7 +281,60 @@ router.get("/sort/ratings/:page/:limit", async (req, res) => {
       recipe.rating = average;
     }
 
-    res.status(200).json(sortedByRating.rows);
+    res.status(200).json(recipes);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get recipes, sort by recipe_views, limit and paginate
+
+router.get("/sort/views/:page/:limit", async (req, res) => {
+  try {
+    const { page, limit } = req.params;
+
+    !page ? (page = 1) : page;
+    !limit ? (limit = 20) : limit;
+
+    const offset = (page - 1) * limit;
+
+    const sortedByViews = await pool.query(
+      "SELECT recipe_id, COUNT(recipe_id) FROM recipe_views GROUP BY recipe_id ORDER BY COUNT(recipe_id) DESC LIMIT $1 OFFSET $2",
+      [limit, offset]
+    );
+
+    let recipes = [];
+
+    for (let recipe of sortedByViews.rows) {
+      let newRecipe = await pool.query(
+        "SELECT * FROM recipes WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      recipes.push(newRecipe.rows[0]);
+    }
+
+    for (let recipe of recipes) {
+      const stars = await pool.query(
+        "SELECT * FROM user_stars WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const views = await pool.query(
+        "SELECT * FROM recipe_views WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const comments = await pool.query(
+        "SELECT * FROM user_comments WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const average = getAverageRatingByRecipeId(recipe.recipe_id);
+
+      recipe.stars = stars.rows;
+      recipe.views = views.rows;
+      recipe.comments = comments.rows;
+      recipe.rating = average;
+    }
+
+    res.status(200).json(recipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
