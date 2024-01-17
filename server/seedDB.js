@@ -3,6 +3,9 @@ const dotenv = require("dotenv");
 const fs = require("fs");
 const { faker } = require("@faker-js/faker");
 const readlineSync = require("readline-sync");
+const _ = require("lodash");
+
+const bcrypt = require("bcrypt");
 
 dotenv.config();
 
@@ -53,6 +56,113 @@ async function initializeDB() {
   }
 }
 
+// Data options
+
+const tagOptions = [
+  "Vegetarian",
+  "Vegan",
+  "Gluten Free",
+  "Dairy Free",
+  "Keto",
+  "Low Carb",
+  "Low Fat",
+  "Low Sodium",
+  "Paleo",
+  "Pescatarian",
+  "Carnivore",
+  "Kosher",
+  "Halal",
+  "Healthy",
+  "Comfort Food",
+  "Quick",
+  "Easy",
+  "Cheap",
+  "Lavish",
+  "Breakfast",
+  "Lunch",
+  "Dinner",
+  "Dessert",
+  "Snack",
+  "Appetizer",
+  "Side",
+  "Drink",
+  "Alcoholic",
+  "Non-Alcoholic",
+  "Baking",
+  "Instant Pot",
+  "Air Fryer",
+  "BBQ",
+  "Mexican",
+  "Italian",
+  "Chinese",
+  "Japanese",
+  "Korean",
+  "Thai",
+  "Indian",
+  "French",
+  "Greek",
+  "Mediterranean",
+  "Middle Eastern",
+  "Spanish",
+  "American",
+  "Southern",
+  "Soul Food",
+  "German",
+  "High Protein",
+  "Low Calorie",
+];
+
+function weightedRandomSelection(items, weights) {
+  const totalWeight = _.sum(weights);
+
+  const randomNum = Math.random() * totalWeight;
+
+  let weightSum = 0;
+
+  for (let i = 0; i < items.length; i++) {
+    weightSum += weights[i];
+    if (randomNum <= weightSum) {
+      return items[i];
+    }
+  }
+}
+async function createTestUser() {
+  try {
+    const client = await pool.connect();
+    const testUserPass = await bcrypt.hash("testuser", 10);
+
+    const testUser = {
+      username: "testuser",
+      password: testUserPass,
+      email: "test@example.com",
+      firstName: "Test",
+      lastName: "User",
+      bio: "I am a test user",
+      profilePic: faker.image.avatar(),
+      isAdmin: true,
+    };
+    // Create test user
+    const userQuery = `
+        INSERT INTO users (username, password, email, first_name, last_name, bio, profile_pic, is_admin)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING user_id
+                `;
+    const userValues = [
+      testUser.username,
+      testUser.password,
+      testUser.email,
+      testUser.firstName,
+      testUser.lastName,
+      testUser.bio,
+      testUser.profilePic,
+      testUser.isAdmin,
+    ];
+    await client.query(userQuery, userValues);
+    client.release();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
 async function seedDB() {
   try {
     const client = await pool.connect();
@@ -65,7 +175,7 @@ async function seedDB() {
     adjust if you change this to whatever you want.
 
     */
-    const userCount = 450;
+    const userCount = 1500;
 
     for (let i = 0; i < userCount; i++) {
       const password = faker.internet
@@ -78,12 +188,14 @@ async function seedDB() {
       const lastName = faker.person
         .lastName({ min: 3, max: 20 })
         .substring(0, 20);
-      const username = faker.internet
-        .userName({
-          firstName: firstName,
-          lastName: lastName,
-        })
-        .substring(0, 20);
+      const username =
+        faker.internet
+          .userName({
+            firstName: firstName,
+            lastName: lastName,
+          })
+          .substring(0, 15) +
+        i * Math.floor(Math.random() * 100);
       const bio = faker.lorem.sentence();
       const profilePic = faker.image.avatar();
       const isAdmin = faker.datatype.boolean();
@@ -122,7 +234,8 @@ async function seedDB() {
       const createdAt = faker.date.past();
       const updatedAt = faker.date.recent();
       const image = faker.image.urlLoremFlickr({ category: "food" });
-      const tags = [faker.lorem.word(), faker.lorem.word(), faker.lorem.word()];
+      const maxTags = faker.number.int({ min: 1, max: 6 });
+      const tags = faker.helpers.shuffle(tagOptions).slice(0, maxTags);
       const preparationTime = faker.number.bigInt({ min: 10, max: 60 });
       const cookingTime = faker.number.bigInt({ min: 20, max: 120 });
       const servings = faker.number.bigInt({ min: 1, max: 10 });
@@ -226,11 +339,21 @@ async function seedDB() {
 
     // Seed user_follows
 
-    const userFollowCount = userCount * 0.5;
+    const userFollowCount = userCount * 0.8;
+
+    let previousFollows = [];
 
     for (let i = 0; i < userFollowCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
       const followerId = faker.helpers.arrayElement(user_ids);
+
+      // Prevent duplicate follows
+
+      if (previousFollows.includes(`${userId}-${followerId}`)) {
+        continue;
+      }
+
+      previousFollows.push(`${userId}-${followerId}`);
 
       const query = `
                     INSERT INTO user_follows (user_id, follower_id)
@@ -243,14 +366,28 @@ async function seedDB() {
 
     // Seed user_stars
 
-    const userStarCount = userCount * 1.2;
+    const userStarCount = userCount * 1.5;
 
     let previousStars = [];
 
+    const recipeWeights = recipe_ids.map((id, index) => {
+      // 5% of recipes are viral
+      if (Math.random() < 0.05) {
+        return recipe_ids.length * 500;
+      }
+      // 35% of recipes have some stars, older more
+      else if (Math.random() < 0.35) {
+        return Math.pow(recipe_ids.length - index, 1.7);
+      }
+      // The rest have close to or none
+      else {
+        return 1;
+      }
+    });
+
     for (let i = 0; i < userStarCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
-      const recipeId = faker.helpers.arrayElement(recipe_ids);
-
+      const recipeId = weightedRandomSelection(recipe_ids, recipeWeights);
       // Prevent duplicate stars
 
       if (previousStars.includes(`${userId}-${recipeId}`)) {
@@ -276,7 +413,7 @@ async function seedDB() {
 
     for (let i = 0; i < userCommentCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
-      const recipeId = faker.helpers.arrayElement(recipe_ids);
+      const recipeId = weightedRandomSelection(recipe_ids, recipeWeights);
       const comment = faker.lorem.paragraph();
       const createdAt = faker.date.past();
       let updatedAt = null;
@@ -364,14 +501,14 @@ async function seedDB() {
 
     // Seed recipe_views
 
-    const recipeViewCount = userCount * 2;
+    const recipeViewCount = userCount * 2.8;
 
     let previousViews = [];
     let viewCount = 0;
 
     while (viewCount < recipeViewCount) {
       const userId = faker.helpers.arrayElement(user_ids);
-      const recipeId = faker.helpers.arrayElement(recipe_ids);
+      const recipeId = weightedRandomSelection(recipe_ids, recipeWeights);
 
       if (previousViews.includes(`${userId}-${recipeId}`)) {
         continue;
@@ -398,7 +535,7 @@ async function seedDB() {
 
     for (let i = 0; i < recipeRatingCount; i++) {
       const userId = faker.helpers.arrayElement(user_ids);
-      const recipeId = faker.helpers.arrayElement(recipe_ids);
+      const recipeId = weightedRandomSelection(recipe_ids, recipeWeights);
       const rating = faker.number.bigInt({ min: 1, max: 5 });
       const createdAt = faker.date.past();
 
@@ -470,6 +607,25 @@ async function seedDB() {
       listRecipeCounter++;
     }
 
+    //Return count of all tables
+
+    const userResult = await client.query("SELECT COUNT(*) FROM users");
+    const recipeResult = await client.query("SELECT COUNT(*) FROM recipes");
+    const tagResult = await client.query("SELECT COUNT(*) FROM recipe_tags");
+    const userStarResult = await client.query(
+      "SELECT COUNT(*) FROM user_stars"
+    );
+    const userCommentResult = await client.query(
+      "SELECT COUNT(*) FROM user_comments"
+    );
+    const recipeViewResult = await client.query(
+      "SELECT COUNT(*) FROM recipe_views"
+    );
+
+    console.log(
+      `Users: ${userResult.rows[0].count} \nRecipes: ${recipeResult.rows[0].count} \nTags: ${tagResult.rows[0].count} \nUser Stars: ${userStarResult.rows[0].count} \nUser Comments: ${userCommentResult.rows[0].count} \nRecipe Views: ${recipeViewResult.rows[0].count}`
+    );
+
     client.release();
   } catch (error) {
     console.error(error);
@@ -481,6 +637,7 @@ async function seedDB() {
 async function initalizeAndSeed() {
   try {
     await initializeDB();
+    await createTestUser();
     await seedDB();
   } catch (error) {
     console.error(error);

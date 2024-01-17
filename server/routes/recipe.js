@@ -7,6 +7,8 @@ const pool = require("../db");
 const addView = require("../utils/addView");
 
 const rateLimit = require("express-rate-limit");
+
+const _ = require("lodash");
 //Client side object protoype:
 
 // {
@@ -106,6 +108,7 @@ router.post("/", checkValidForm, creationLimiter, async (req, res) => {
 
     if (tags) {
       tags.forEach(async (tag) => {
+        tag = _.startCase(tag);
         const newTag = await pool.query(
           "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
           [recipe_id, tag]
@@ -711,6 +714,9 @@ router.get("/tags/:page/:limit/:query?", async (req, res) => {
     limit = limit ? limit : 20;
 
     const offset = (page - 1) * limit;
+    //decode uri
+    query = _.startCase(decodeURIComponent(query));
+    console.log(query);
 
     let tags;
     if (query) {

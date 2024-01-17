@@ -8,6 +8,9 @@ import Stack from "@mui/material/Stack";
 import { CircularProgress } from "@mui/material";
 import _ from "lodash";
 import SERVER_URL from "../../../vars/server_url";
+import NumAbbr from "number-abbreviate";
+
+const numAbbr = new NumAbbr();
 
 export default function TagEditor({ inputTags, setParentTags }) {
   //Tags are our local data from the user
@@ -44,14 +47,6 @@ export default function TagEditor({ inputTags, setParentTags }) {
       });
   }, [query]);
 
-  function addTag(tag) {
-    tag = _.capitalize(tag);
-    setTags([...tags, tag]);
-  }
-
-  function deleteTag(tag) {
-    setTags(tags.filter((item) => item.tag !== tag.tag));
-  }
   useEffect(() => {
     if (autocompleteRef.current) {
       const input = autocompleteRef.current.querySelector("input");
@@ -79,7 +74,9 @@ export default function TagEditor({ inputTags, setParentTags }) {
         multiple
         id="tags-standard"
         getOptionSelected={(option, value) => option?.tag === value?.tag}
-        getOptionLabel={(option) => option.tag}
+        getOptionLabel={(option) =>
+          option.tag + " " + numAbbr.abbreviate(option.count)
+        }
         filterSelectedOptions
         freeSolo
         open={open}
@@ -108,7 +105,7 @@ export default function TagEditor({ inputTags, setParentTags }) {
         onChange={(event, newValue) => {
           let newTags;
           if (typeof newValue[newValue.length - 1] === "string") {
-            const newTag = _.capitalize(newValue[newValue.length - 1].trim());
+            const newTag = _.startCase(newValue[newValue.length - 1].trim());
             if (!tags.find((tag) => tag.tag === newTag)) {
               newTags = [...newValue.slice(0, -1), { tag: newTag }];
             } else {
