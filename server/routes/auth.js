@@ -106,7 +106,15 @@ router.post("/login", loginLimiter, async (req, res) => {
       last_name: user.rows[0].last_name,
       bio: user.rows[0].bio,
       user_id: user.rows[0].user_id,
+      profile_pic: user.rows[0].profile_pic,
+      created_at: user.rows[0].created_at,
+      last_active: user.rows[0].last_active,
+      isActive: true,
     };
+
+    if (user.rows[0].isAdmin) {
+      filteredUser.isAdmin = true;
+    }
 
     const token = jwt.sign(filteredUser, secret_key);
 

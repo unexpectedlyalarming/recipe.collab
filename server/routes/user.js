@@ -54,6 +54,10 @@ router.get("/:id", async (req, res) => {
       last_name: user.rows[0].last_name,
       profile_pic: user.rows[0].profile_pic,
       created_at: user.rows[0].created_at,
+      last_active: user.rows[0].last_active,
+      is_active: user.rows[0].is_active,
+      isAdmin: user.rows[0].isAdmin,
+      user_id: user.rows[0].user_id,
       bio: user.rows[0].bio,
       recipes: recipes.rows,
       stars: stars.rows,
@@ -114,7 +118,13 @@ router.put("/:id", async (req, res) => {
       profile_pic: updatedUser.rows[0].profile_pic,
       user_id: updatedUser.rows[0].user_id,
       created_at: updatedUser.rows[0].created_at,
+      last_active: updatedUser.rows[0].last_active,
+      isActive: updatedUser.rows[0].isActive,
     };
+
+    if (updatedUser.rows[0].isAdmin) {
+      filteredUser.isAdmin = true;
+    }
 
     res.status(200).json(filteredUser);
   } catch (error) {

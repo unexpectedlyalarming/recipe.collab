@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom";
-import * as React from "react";
 import { useState } from "react";
 import AppBar from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
@@ -13,16 +12,14 @@ import Avatar from "@mui/material/Avatar";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
-import AdbIcon from "@mui/icons-material/Adb";
+import Badge from "@mui/material/Badge";
+
 import { useContext } from "react";
 import { UserContext } from "../../contexts/userContext";
 
-const pages = ["Home", "Categories", "Cart"];
-const settings = ["Profile", "Lists", "My Recipes", "Logout"];
 export default function Nav() {
   const [anchorElNav, setAnchorElNav] = useState(null);
   const [anchorElUser, setAnchorElUser] = useState(null);
-
   const { user } = useContext(UserContext);
 
   const handleOpenNavMenu = (e) => {
@@ -39,6 +36,27 @@ export default function Nav() {
   const handleCloseUserMenu = () => {
     setAnchorElUser(null);
   };
+
+  const pages = ["Home", "Categories", "Cart"];
+
+  const settings = [
+    {
+      name: "Profile",
+      link: `/user/${user?.user_id}`,
+    },
+    {
+      name: "Lists",
+      link: "/lists",
+    },
+    {
+      name: "My Recipes",
+      link: `/user/recipes/${user?.user_id}`,
+    },
+    {
+      name: "Logout",
+      link: "/logout",
+    },
+  ];
 
   return (
     <AppBar position="static">
@@ -132,15 +150,22 @@ export default function Nav() {
           <Box sx={{ flexGrow: 0 }}>
             <Tooltip title="Open settings">
               <IconButton onClick={handleOpenUserMenu} sx={{ p: 0 }}>
-                {/* Avatar goes here */}
-                {user?.profile_pic ? (
-                  <Avatar alt={user.username} src={user.profile_pic} />
-                ) : (
-                  <Avatar
-                    alt={user.username}
-                    src="/static/images/avatar/2.jpg"
-                  />
-                )}
+                <Badge
+                  variant="dot"
+                  overlap="circular"
+                  anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                  color="success"
+                >
+                  {/* Avatar goes here */}
+                  {user?.profile_pic ? (
+                    <Avatar alt={user.username} src={user.profile_pic} />
+                  ) : (
+                    <Avatar
+                      alt={user.username}
+                      src="/static/images/avatar/2.jpg"
+                    />
+                  )}
+                </Badge>
               </IconButton>
             </Tooltip>
             <Menu
@@ -160,18 +185,20 @@ export default function Nav() {
               onClose={handleCloseUserMenu}
             >
               {settings.map((setting) => (
-                <MenuItem key={setting} onClick={handleCloseUserMenu}>
-                  {/* Todo: figure out how to append id or something else */}
+                <MenuItem
+                  key={setting.name}
+                  onClick={handleCloseUserMenu}
+                  component={Link}
+                  to={setting.link}
+                >
                   <Typography
                     textAlign="center"
-                    component={Link}
-                    to={"/" + setting.toLowerCase()}
                     sx={{
                       color: "inherit",
                       textDecoration: "none",
                     }}
                   >
-                    {setting}
+                    {setting.name}
                   </Typography>
                 </MenuItem>
               ))}

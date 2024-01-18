@@ -19,6 +19,7 @@ import RecipePage from "./pages/Recipe/RecipePage";
 import SERVER_URL from "./vars/server_url";
 import theme from "./theme";
 import CreateRecipe from "./pages/Recipe/Create/CreateRecipe";
+import Profile from "./pages/Profile/Profile";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -89,6 +90,10 @@ function Routers() {
         {
           path: "/recipe/create",
           element: <CreateRecipe />,
+        },
+        {
+          path: "/user/:id",
+          element: <Profile />,
         },
       ],
     },
