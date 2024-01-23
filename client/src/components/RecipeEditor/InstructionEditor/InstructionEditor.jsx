@@ -13,6 +13,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { TextField } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import _ from "lodash";
+import CheckIcon from "@mui/icons-material/Check";
 
 export default function InstructionEditor({
   inputInstructions,
@@ -21,6 +22,8 @@ export default function InstructionEditor({
   const [instructions, setInstructions] = useState(
     inputInstructions ? inputInstructions : []
   );
+
+  const [editingIndex, setEditingIndex] = useState(null);
 
   const [currentInstruction, setCurrentInstruction] = useState({
     step_number: "",
@@ -37,6 +40,31 @@ export default function InstructionEditor({
 
     setCurrentInstruction({
       step_number: instructions.length + 1,
+      description: "",
+      image: "",
+    });
+  }
+
+  function setIndex(index) {
+    setEditingIndex(index);
+    setCurrentInstruction(
+      instructions.find((instruction) => instruction.step_number === index)
+    );
+  }
+
+  function updateInstruction(index) {
+    setEditingIndex(null);
+    const newInstructions = instructions.map((instruction) => {
+      if (instruction.step_number === index) {
+        return currentInstruction;
+      } else {
+        return instruction;
+      }
+    });
+    setInstructions(newInstructions);
+
+    setCurrentInstruction({
+      step_number: "",
       description: "",
       image: "",
     });
@@ -90,16 +118,35 @@ export default function InstructionEditor({
           </TableHead>
           <TableBody>
             {instructions?.map((instruction) => (
-              <TableRow key={instruction.step_number}>
+              <TableRow
+                key={instruction.step_number}
+                sx={{
+                  backgroundColor:
+                    editingIndex === instruction.step_number
+                      ? "black"
+                      : "transparent",
+                }}
+              >
                 <TableCell>{instruction.step_number}</TableCell>
                 <TableCell>{instruction.description}</TableCell>
                 <TableCell>{instruction.image}</TableCell>
                 <TableCell>
-                  <IconButton value={instruction.step_number}>
-                    <EditIcon />
-                  </IconButton>
+                  {editingIndex !== instruction?.step_number ? (
+                    <IconButton
+                      value={instruction.step_number}
+                      onClick={() => setIndex(instruction.step_number)}
+                    >
+                      <EditIcon />
+                    </IconButton>
+                  ) : (
+                    <IconButton
+                      value={instruction.step_number}
+                      onClick={() => updateInstruction(instruction.step_number)}
+                    >
+                      <CheckIcon />
+                    </IconButton>
+                  )}
                 </TableCell>
-
                 <TableCell>
                   <IconButton
                     onClick={() => deleteInstruction(instruction?.step_number)}
@@ -111,7 +158,9 @@ export default function InstructionEditor({
             ))}
 
             <TableRow>
-              <TableCell>{instructions?.length + 1}</TableCell>
+              <TableCell>
+                {editingIndex ? editingIndex : instructions?.length + 1}
+              </TableCell>
               <TableCell>
                 <TextField
                   id="outlined-multiline-flexible"
