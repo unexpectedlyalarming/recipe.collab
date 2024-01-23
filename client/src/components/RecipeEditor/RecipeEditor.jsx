@@ -21,13 +21,13 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
     inputRecipe
       ? inputRecipe
       : {
-          name: "",
+          title: "",
           description: "",
-          prepTime: {
+          preparation_time: {
             minutes: "",
             hours: "",
           },
-          cookTime: {
+          cooking_time: {
             minutes: "",
             hours: "",
           },
@@ -42,22 +42,24 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
   const [formattedRecipe, setFormattedRecipe] = useState();
 
   const [formErrors, setFormErrors] = useState({
-    name: false,
+    title: false,
     description: false,
-    prepTime: false,
-    cookTime: false,
+    preparation_time: false,
+    cooking_time: false,
     servings: false,
     difficulty: false,
     ingredients: false,
     instructions: false,
   });
 
-  if (inputRecipe) {
-    setRecipe(inputRecipe);
-    setIngredients(inputRecipe?.ingredients);
-    setInstructions(inputRecipe?.instructions);
-    setTags(inputRecipe?.tags);
-  }
+  useEffect(() => {
+    if (inputRecipe) {
+      setRecipe(inputRecipe);
+      setIngredients(inputRecipe?.ingredients);
+      setInstructions(inputRecipe?.instructions);
+      setTags(inputRecipe?.tags);
+    }
+  }, [inputRecipe]);
 
   async function convertFormTimeToInterval(time) {
     try {
@@ -86,7 +88,6 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
 
   function updateTags(tags) {
     setTags(tags);
-    console.log(tags);
   }
 
   const {
@@ -115,17 +116,17 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
     try {
       let errors = {};
 
-      if (!recipe.name) {
-        errors.name = "Name is required";
+      if (!recipe.title) {
+        errors.title = "title is required";
       }
       if (!recipe.description) {
         errors.description = "Description is required";
       }
-      if (!recipe.prepTime.hours && !recipe.prepTime.minutes) {
-        errors.prepTime = "Prep time is required";
+      if (!recipe.preparation_time.hours && !recipe.preparation_time.minutes) {
+        errors.preparation_time = "Prep time is required";
       }
-      if (!recipe.cookTime.hours && !recipe.cookTime.minutes) {
-        errors.cookTime = "Cook time is required";
+      if (!recipe.cooking_time.hours && !recipe.cooking_time.minutes) {
+        errors.cooking_time = "Cook time is required";
       }
       if (!recipe.servings) {
         errors.servings = "Servings are required";
@@ -148,10 +149,12 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
       }
 
       const formattedRecipe = {
-        title: recipe.name,
+        title: recipe.title,
         description: recipe.description,
-        preparation_time: await convertFormTimeToInterval(recipe.prepTime),
-        cooking_time: await convertFormTimeToInterval(recipe.cookTime),
+        preparation_time: await convertFormTimeToInterval(
+          recipe.preparation_time
+        ),
+        cooking_time: await convertFormTimeToInterval(recipe.cooking_time),
         servings: recipe.servings,
         difficulty_level: recipe.difficulty,
         ingredients: ingredients,
@@ -191,14 +194,14 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
       <Stack spacing={2}>
         <TextField
           id="outlined-multiline-flexible"
-          label="Recipe Name"
+          label="Recipe Title"
           multiline
           maxRows={4}
-          value={recipe.name}
+          value={recipe.title}
           required
-          onChange={(e) => setRecipe({ ...recipe, name: e.target.value })}
-          error={!!formErrors.name}
-          helperText={formErrors.name}
+          onChange={(e) => setRecipe({ ...recipe, title: e.target.value })}
+          error={!!formErrors.title}
+          helperText={formErrors.title}
         />
         <TextField
           id="outlined-multiline-flexible"
@@ -219,11 +222,14 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
             id="outlined-multiline-flexible"
             label="Hours"
             type="number"
-            value={recipe.prepTime.hours}
+            value={recipe.preparation_time.hours}
             onChange={(e) =>
               setRecipe({
                 ...recipe,
-                prepTime: { ...recipe.prepTime, hours: e.target.value },
+                preparation_time: {
+                  ...recipe.preparation_time,
+                  hours: e.target.value,
+                },
               })
             }
           />
@@ -231,15 +237,18 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
             id="outlined-multiline-flexible"
             label="Minutes"
             type="number"
-            value={recipe.prepTime.minutes}
+            value={recipe.preparation_time.minutes}
             onChange={(e) =>
               setRecipe({
                 ...recipe,
-                prepTime: { ...recipe.prepTime, minutes: e.target.value },
+                preparation_time: {
+                  ...recipe.preparation_time,
+                  minutes: e.target.value,
+                },
               })
             }
-            error={!!formErrors.prepTime}
-            helperText={formErrors.prepTime}
+            error={!!formErrors.preparation_time}
+            helperText={formErrors.preparation_time}
           />
         </Stack>
 
@@ -250,11 +259,11 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
             id="outlined-multiline-flexible"
             label="Hours"
             type="number"
-            value={recipe.cookTime.hours}
+            value={recipe.cooking_time.hours}
             onChange={(e) =>
               setRecipe({
                 ...recipe,
-                cookTime: { ...recipe.cookTime, hours: e.target.value },
+                cooking_time: { ...recipe.cooking_time, hours: e.target.value },
               })
             }
           />
@@ -263,15 +272,18 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
             id="outlined-multiline-flexible"
             label="Minutes"
             type="number"
-            value={recipe.cookTime.minutes}
+            value={recipe.cooking_time.minutes}
             onChange={(e) =>
               setRecipe({
                 ...recipe,
-                cookTime: { ...recipe.cookTime, minutes: e.target.value },
+                cooking_time: {
+                  ...recipe.cooking_time,
+                  minutes: e.target.value,
+                },
               })
             }
-            error={!!formErrors.cookTime}
-            helperText={formErrors.cookTime}
+            error={!!formErrors.cooking_time}
+            helperText={formErrors.cooking_time}
           />
         </Stack>
 

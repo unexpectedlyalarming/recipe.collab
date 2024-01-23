@@ -23,8 +23,10 @@ import RestaurantIcon from "@mui/icons-material/Restaurant";
 import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function FullRecipe({ id }) {
+  const navigate = useNavigate();
   const {
     data: recipe,
     loading,
@@ -120,6 +122,10 @@ export default function FullRecipe({ id }) {
     setIsForksOpen(!isForksOpen);
   }
 
+  function forkRecipe() {
+    navigate(`/recipe/create/${id}?fork=true`);
+  }
+
   return (
     <Container>
       <Stack spacing={2}>
@@ -171,7 +177,7 @@ export default function FullRecipe({ id }) {
           Needs to go to an editor with the current recipe
           
           */}
-          <Button variant="contained" color="primary">
+          <Button variant="contained" color="primary" onClick={forkRecipe}>
             Fork Recipe
           </Button>
           <Button variant="contained" color="secondary" onClick={toggleForks}>

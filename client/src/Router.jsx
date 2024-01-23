@@ -92,6 +92,10 @@ function Routers() {
           element: <CreateRecipe />,
         },
         {
+          path: "/recipe/create/:id",
+          element: <CreateRecipe />,
+        },
+        {
           path: "/user/:id",
           element: <Profile />,
         },

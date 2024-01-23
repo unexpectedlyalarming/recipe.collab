@@ -56,6 +56,12 @@ export default function InstructionEditor({
     updateParentInstructions(instructions);
   }, [instructions]);
 
+  useEffect(() => {
+    if (inputInstructions && !instructions.length) {
+      setInstructions(inputInstructions);
+    }
+  }, [inputInstructions]);
+
   return (
     <Stack spacing={2}>
       <Typography variant="h5">Instructions</Typography>
@@ -83,7 +89,7 @@ export default function InstructionEditor({
             </TableRow>
           </TableHead>
           <TableBody>
-            {instructions.map((instruction) => (
+            {instructions?.map((instruction) => (
               <TableRow key={instruction.step_number}>
                 <TableCell>{instruction.step_number}</TableCell>
                 <TableCell>{instruction.description}</TableCell>
@@ -96,7 +102,7 @@ export default function InstructionEditor({
 
                 <TableCell>
                   <IconButton
-                    onClick={() => deleteInstruction(instruction.step_number)}
+                    onClick={() => deleteInstruction(instruction?.step_number)}
                   >
                     <TrashIcon />
                   </IconButton>
@@ -105,14 +111,14 @@ export default function InstructionEditor({
             ))}
 
             <TableRow>
-              <TableCell>{instructions.length + 1}</TableCell>
+              <TableCell>{instructions?.length + 1}</TableCell>
               <TableCell>
                 <TextField
                   id="outlined-multiline-flexible"
                   label="Description"
                   multiline
                   maxRows={24}
-                  value={currentInstruction.description}
+                  value={currentInstruction?.description}
                   onChange={(e) =>
                     setCurrentInstruction({
                       ...currentInstruction,
@@ -131,7 +137,7 @@ export default function InstructionEditor({
                   label="Image"
                   multiline
                   maxRows={8}
-                  value={currentInstruction.image}
+                  value={currentInstruction?.image}
                   onChange={(e) =>
                     setCurrentInstruction({
                       ...currentInstruction,
@@ -143,7 +149,7 @@ export default function InstructionEditor({
               <TableCell>
                 <IconButton
                   onClick={addInstruction}
-                  disabled={!currentInstruction.description}
+                  disabled={!currentInstruction?.description}
                 >
                   <AddIcon />
                 </IconButton>

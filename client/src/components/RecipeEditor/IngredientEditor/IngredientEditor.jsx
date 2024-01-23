@@ -40,9 +40,13 @@ export default function IngredientEditor({
     "item",
   ].sort();
 
-  const [ingredients, setIngredients] = useState(
-    inputIngredients ? inputIngredients : []
-  );
+  const [ingredients, setIngredients] = useState([]);
+
+  useEffect(() => {
+    if (inputIngredients && !ingredients.length) {
+      setIngredients(inputIngredients);
+    }
+  }, [inputIngredients]);
 
   const [currentIngredient, setCurrentIngredient] = useState({
     name: "",
@@ -90,7 +94,7 @@ export default function IngredientEditor({
             </TableRow>
           </TableHead>
           <TableBody>
-            {ingredients.map((ingredient, index) => (
+            {ingredients?.map((ingredient, index) => (
               <TableRow key={ingredient.name + index}>
                 <TableCell>{ingredient.name}</TableCell>
                 <TableCell>{ingredient.quantity}</TableCell>

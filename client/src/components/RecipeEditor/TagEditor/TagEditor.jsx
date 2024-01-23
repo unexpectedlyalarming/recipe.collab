@@ -14,7 +14,7 @@ const numAbbr = new NumAbbr();
 
 export default function TagEditor({ inputTags, setParentTags }) {
   //Tags are our local data from the user
-  const [tags, setTags] = useState(inputTags ? inputTags : []);
+  const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   //Our query is the input value from the user
   const [query, setQuery] = useState("");
@@ -28,6 +28,12 @@ export default function TagEditor({ inputTags, setParentTags }) {
   useEffect(() => {
     setParentTags(tags);
   }, [tags]);
+
+  useEffect(() => {
+    if (inputTags && !tags?.length) {
+      setTags(inputTags);
+    }
+  }, [inputTags]);
 
   const limit = 10;
   const page = 1;
@@ -65,8 +71,8 @@ export default function TagEditor({ inputTags, setParentTags }) {
       <Autocomplete
         ref={autocompleteRef}
         options={
-          fetchedTags && fetchedTags.length > 0
-            ? fetchedTags.filter(
+          fetchedTags && fetchedTags?.length > 0
+            ? fetchedTags?.filter(
                 (option) => !tags.find((tag) => tag.tag === option.tag)
               )
             : []
@@ -75,7 +81,7 @@ export default function TagEditor({ inputTags, setParentTags }) {
         id="tags-standard"
         getOptionSelected={(option, value) => option?.tag === value?.tag}
         getOptionLabel={(option) =>
-          option.tag + " " + numAbbr.abbreviate(option.count)
+          option?.tag + " " + numAbbr.abbreviate(option?.count)
         }
         filterSelectedOptions
         freeSolo
@@ -115,6 +121,7 @@ export default function TagEditor({ inputTags, setParentTags }) {
             newTags = newValue;
           }
           setTags(newTags);
+          setInputValue("");
         }}
         renderTags={(tagValue, getTagProps) =>
           tagValue.map((option, index) => (

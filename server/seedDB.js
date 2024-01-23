@@ -112,6 +112,50 @@ const tagOptions = [
   "Low Calorie",
 ];
 
+function generateTimeInterval(weight) {
+  // const preparationTime = `${faker.number.bigInt({
+  //   min: 10,
+  //   max: 60,
+  // })} minutes`;
+  // const cookingTime = `${faker.number.bigInt({
+  //   min: 20,
+  //   max: 120,
+  // })} minutes`;
+
+  if (!weight) {
+    weight = 1;
+  }
+
+  const minutes = Math.floor(
+    faker.number.bigInt({ min: 10, max: 120 }) * weight
+  );
+
+  const hours = Math.floor(minutes / 60);
+
+  const remainingMinutes = minutes % 60;
+
+  let timeString = "";
+
+  if (hours > 0) {
+    timeString += `${hours} hour`;
+    if (hours > 1) {
+      timeString += "s";
+    }
+  }
+
+  if (remainingMinutes > 0) {
+    if (hours > 0) {
+      timeString += " ";
+    }
+    timeString += `${remainingMinutes} minute`;
+    if (remainingMinutes > 1) {
+      timeString += "s";
+    }
+  }
+
+  return timeString;
+}
+
 function weightedRandomSelection(items, weights) {
   const totalWeight = _.sum(weights);
 
@@ -236,8 +280,8 @@ async function seedDB() {
       const image = faker.image.urlLoremFlickr({ category: "food" });
       const maxTags = faker.number.int({ min: 1, max: 6 });
       const tags = faker.helpers.shuffle(tagOptions).slice(0, maxTags);
-      const preparationTime = faker.number.bigInt({ min: 10, max: 60 });
-      const cookingTime = faker.number.bigInt({ min: 20, max: 120 });
+      const preparationTime = generateTimeInterval(0.5);
+      const cookingTime = generateTimeInterval(1);
       const servings = faker.number.bigInt({ min: 1, max: 10 });
       const difficultyLevel = faker.helpers.arrayElement([
         "Easy",

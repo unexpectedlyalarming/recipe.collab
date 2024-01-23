@@ -799,6 +799,7 @@ router.get("/tags/:page/:limit/:query?", async (req, res) => {
         [limit, offset]
       );
     }
+    //
 
     res.status(200).json(tags.rows);
   } catch (error) {
