@@ -5,7 +5,6 @@ import {
   Star as StarIcon,
   Comment as CommentIcon,
   Visibility as VisibilityIcon,
-  FilePresent,
 } from "@mui/icons-material";
 import {
   Table,
@@ -20,6 +19,10 @@ import Image from "mui-image";
 import useApi from "../../hooks/useApi";
 import { useEffect } from "react";
 import Chip from "@mui/material/Chip";
+import RestaurantIcon from "@mui/icons-material/Restaurant";
+import Button from "@mui/material/Button";
+import { Link } from "react-router-dom";
+import { useState } from "react";
 
 export default function FullRecipe({ id }) {
   const {
@@ -33,6 +36,8 @@ export default function FullRecipe({ id }) {
   useEffect(() => {
     request();
   }, []);
+
+  const [isForksOpen, setIsForksOpen] = useState(false);
 
   function formatTime(time) {
     let timeString = "";
@@ -102,6 +107,19 @@ export default function FullRecipe({ id }) {
     );
   });
 
+  const forksView = recipe?.forks?.map((fork) => {
+    return (
+      <Stack key={fork.recipe_id}>
+        <Typography variant="h5">{fork.version_number}</Typography>
+        <Link href={`/recipe/${fork.recipe_id}`}>View Fork</Link>
+      </Stack>
+    );
+  });
+
+  function toggleForks() {
+    setIsForksOpen(!isForksOpen);
+  }
+
   return (
     <Container>
       <Stack spacing={2}>
@@ -143,7 +161,24 @@ export default function FullRecipe({ id }) {
             <VisibilityIcon />
             {recipe?.views?.length}
           </Typography>
+          <Typography variant="body2">
+            <RestaurantIcon />
+            {recipe?.forks?.length}
+          </Typography>
         </Stack>
+        <Stack direction="row" spacing={2}>
+          {/* 
+          Needs to go to an editor with the current recipe
+          
+          */}
+          <Button variant="contained" color="primary">
+            Fork Recipe
+          </Button>
+          <Button variant="contained" color="secondary" onClick={toggleForks}>
+            View {recipe?.forks?.length} Forks
+          </Button>
+        </Stack>
+        {isForksOpen && forksView}
 
         <Typography variant="h4">Ingredients</Typography>
 

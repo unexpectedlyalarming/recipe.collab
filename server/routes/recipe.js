@@ -425,6 +425,11 @@ router.get("/:id", addView, async (req, res) => {
 
     const average = await getAverageRatingByRecipeId(id);
 
+    const forks = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
+      [id]
+    );
+
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
       title: recipe.rows[0].title,
@@ -448,6 +453,7 @@ router.get("/:id", addView, async (req, res) => {
       comments: comments.rows,
       views: views.rows,
       rating: average,
+      forks: forks?.rows,
     };
 
     res.status(200).json(recipeObject);

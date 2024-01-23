@@ -13,10 +13,9 @@ import useApi from "../../hooks/useApi";
 import IngredientEditor from "./IngredientEditor/IngredientEditor";
 import InstructionEditor from "./InstructionEditor/InstructionEditor";
 import { FormHelperText } from "@mui/material";
-import { set } from "lodash";
 import TagEditor from "./TagEditor/TagEditor";
 
-export default function RecipeEditor({ inputRecipe }) {
+export default function RecipeEditor({ inputRecipe, isFork }) {
   const navigate = useNavigate();
   const [recipe, setRecipe] = useState(
     inputRecipe
@@ -101,6 +100,17 @@ export default function RecipeEditor({ inputRecipe }) {
     body: formattedRecipe,
   });
 
+  const {
+    data: forkedRecipe,
+    loading: forkedRecipeLoading,
+    request: forkRecipeRequest,
+    success: forkSuccess,
+  } = useApi({
+    url: "/recipe/fork/" + inputRecipe?.recipe_id,
+    method: "post",
+    body: formattedRecipe,
+  });
+
   async function formatAndSendRecipe() {
     try {
       let errors = {};
@@ -154,7 +164,14 @@ export default function RecipeEditor({ inputRecipe }) {
 
       // Todo: send recipe, support image upload, add loading indicator
 
-      await sendRecipeRequest();
+      if (isFork && inputRecipe) {
+        await forkRecipeRequest();
+      }
+      if (isFork && !inputRecipe) {
+        console.error("Cannot fork a new recipe");
+      } else {
+        await sendRecipeRequest();
+      }
     } catch (error) {
       console.error(error);
     }
@@ -162,9 +179,12 @@ export default function RecipeEditor({ inputRecipe }) {
 
   useEffect(() => {
     if (success) {
-      navigate(`/recipe/${newRecipe.recipe_id}`);
+      navigate(`/recipe/${newRecipe?.recipe_id}`);
     }
-  }, [success]);
+    if (forkSuccess) {
+      navigate(`/recipe/${forkedRecipe?.recipe_id}`);
+    }
+  }, [success, forkSuccess]);
 
   return (
     <Container>
