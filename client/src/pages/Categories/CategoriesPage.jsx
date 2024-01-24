@@ -5,12 +5,23 @@ import { useEffect } from "react";
 import Loading from "../Loading/Loading";
 import { useState } from "react";
 import Container from "@mui/material/Container";
+import { useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function CategoriesPage() {
-  const [filter, setFilter] = useState("Vegan");
+  const location = useLocation();
+  const navigate = useNavigate();
+  const queryParams = new URLSearchParams(location.search);
+
+  const [filter, setFilter] = useState(queryParams.get("tag") || "");
 
   const page = 1;
   const limit = 20;
+
+  function updateFilter(tag) {
+    setFilter(tag);
+    navigate(`/categories?tag=${tag}`, { replace: true });
+  }
 
   const {
     data: tags,
@@ -32,7 +43,6 @@ export default function CategoriesPage() {
   useEffect(() => {
     async function fetchRecipes() {
       try {
-        console.log(filter);
         await request();
       } catch (error) {
         console.log(error);
@@ -52,9 +62,15 @@ export default function CategoriesPage() {
     fetchTags();
   }, []);
 
+  useEffect(() => {
+    if (queryParams.get("tag")) {
+      setFilter(queryParams.get("tag"));
+    }
+  }, [queryParams]);
+
   return (
     <Container>
-      <CategoriesFilters tags={tags} setFilter={setFilter} />
+      <CategoriesFilters tags={tags} setFilter={updateFilter} filter={filter} />
       {loading ? <Loading /> : <CategoriesView recipes={recipesData} />}
     </Container>
   );

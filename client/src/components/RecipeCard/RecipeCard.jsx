@@ -85,7 +85,7 @@ export default function RecipeCard({ recipe }) {
             label={tag}
             color="primary"
             onClick={() => {
-              navigate(`/search/${tag}`);
+              navigate(`/categories?tag=${tag}`);
             }}
           />
         ))}
@@ -93,29 +93,3 @@ export default function RecipeCard({ recipe }) {
     </Card>
   );
 }
-// Converting to card
-
-/* <Container>
-<Link to={`/recipes/${recipe?.recipe_id}`}>
-  <Typography variant="h5">{recipe?.title}</Typography>
-
-  <img src={recipe?.image} alt={recipe?.title} />
-
-  <Typography variant="body1">{recipe?.description}</Typography>
-
-  <Stack direction="row" spacing={2}>
-    <Typography variant="body2">
-      <StarIcon />
-      {recipe?.rating}
-    </Typography>
-    <Typography variant="body2">
-      <CommentIcon />
-      {recipe?.comments.length}
-    </Typography>
-    <Typography variant="body2">
-      <VisibilityIcon />
-      {recipe?.views.length}
-    </Typography>
-  </Stack>
-</Link>
-</Container> */
