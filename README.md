@@ -7,7 +7,14 @@ Currently a temporary name, recipe.collab is a work-in-progress recipe site that
 > ⚠️ At the moment Recipe.collab is early in development there is not much documentation as it is not finished. This readme will be updated as progress is made.
 
 
-## Installation 
+# Table of contents
+
+1. [Installation](#installation)
+2. [Features](#features)
+3. [License](#license)
+
+
+# Installation 
 
 ### Server
 
@@ -56,3 +63,23 @@ cd client
 npm i
 npm run dev
 ```
+
+# Features
+
+### Full fledged recipe editor
+No more markdown or janky outdated editor. Just a simple editor that makes it hard to format the recipe wrong.
+
+### Recipe forking
+A key feature, forking (like in Git) lets you copy and modify a recipe for yourself. May the best recipe win.
+
+### Carts
+Carts let you save recipes for your next meal plan. In the current roadmap, the cart will calculate and aggregate measurements, saving you time when planning your meals.
+
+### Various user features
+Along with these, you can expect plenty of useful features like filtering by tags; stars, comments, lists, etc.
+
+
+# License
+
+This project is licensed under the terms of the [MIT license.](https://opensource.org/license/mit/)
+
