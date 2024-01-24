@@ -24,6 +24,8 @@ import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useContext } from "react";
+import { UserContext } from "../../contexts/userContext";
 
 export default function FullRecipe({ id }) {
   const navigate = useNavigate();
@@ -37,7 +39,9 @@ export default function FullRecipe({ id }) {
 
   useEffect(() => {
     request();
-  }, []);
+  }, [id]);
+
+  const { user } = useContext(UserContext);
 
   const [isForksOpen, setIsForksOpen] = useState(false);
 
@@ -111,9 +115,9 @@ export default function FullRecipe({ id }) {
 
   const forksView = recipe?.forks?.map((fork) => {
     return (
-      <Stack key={fork.recipe_id}>
+      <Stack key={fork.version_id}>
         <Typography variant="h5">{fork.version_number}</Typography>
-        <Link href={`/recipe/${fork.recipe_id}`}>View Fork</Link>
+        <Link to={`/recipe/${fork.recipe_id}`}>View Fork</Link>
       </Stack>
     );
   });
@@ -126,6 +130,8 @@ export default function FullRecipe({ id }) {
     navigate(`/recipe/create/${id}?fork=true`);
   }
 
+  const userOwnsRecipe = user?.user_id === recipe?.user_id;
+
   return (
     <Container>
       <Stack spacing={2}>
@@ -137,6 +143,18 @@ export default function FullRecipe({ id }) {
         <Stack direction="row" spacing={2}>
           {tags}
         </Stack>
+        {userOwnsRecipe && (
+          <Stack direction="row" spacing={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={() => navigate(`/recipe/edit/${id}`)}
+            >
+              Edit Recipe
+            </Button>
+          </Stack>
+        )}
+
         <Typography variant="h5">{recipe?.description}</Typography>
 
         <Stack direction="row" spacing={2}>
@@ -173,16 +191,22 @@ export default function FullRecipe({ id }) {
           </Typography>
         </Stack>
         <Stack direction="row" spacing={2}>
-          {/* 
-          Needs to go to an editor with the current recipe
-          
-          */}
           <Button variant="contained" color="primary" onClick={forkRecipe}>
             Fork Recipe
           </Button>
           <Button variant="contained" color="secondary" onClick={toggleForks}>
             View {recipe?.forks?.length} Forks
           </Button>
+          <Typography
+            variant="body2"
+            sx={{
+              textAlign: "center",
+              alignSelf: "center",
+              justifySelf: "center",
+            }}
+          >
+            Version {recipe?.version_number}
+          </Typography>
         </Stack>
         {isForksOpen && forksView}
 
@@ -213,21 +237,3 @@ export default function FullRecipe({ id }) {
     </Container>
   );
 }
-
-/* 
-Prep/cook time format
-
-Object
-{
-    minutes: 23242,
-    hours: 2323,
-    seconds,
-    etc etc
-
-
-}
-
-Must convert to string and map to display
-
-
-*/

@@ -394,6 +394,10 @@ router.get("/:id", addView, async (req, res) => {
       [id]
     );
 
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
+
     const ingredients = await pool.query(
       "SELECT * FROM ingredients WHERE recipe_id = $1",
       [id]
@@ -425,11 +429,25 @@ router.get("/:id", addView, async (req, res) => {
 
     const average = await getAverageRatingByRecipeId(id);
 
-    const forks = await pool.query(
+    const recipeVersionForks = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    const originalRecipeForks = await pool.query(
       "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
       [id]
     );
 
+    const recipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+    let version_number = recipeVersion.rows[0]
+      ? recipeVersion?.rows[0]?.version_number
+      : 1;
+
+    const forks = [...originalRecipeForks.rows, ...recipeVersionForks.rows];
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
       title: recipe.rows[0].title,
@@ -453,7 +471,8 @@ router.get("/:id", addView, async (req, res) => {
       comments: comments.rows,
       views: views.rows,
       rating: average,
-      forks: forks?.rows,
+      forks,
+      version_number,
     };
 
     res.status(200).json(recipeObject);
@@ -802,6 +821,44 @@ router.get("/tags/:page/:limit/:query?", async (req, res) => {
     //
 
     res.status(200).json(tags.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//Get recipe by user_id
+
+router.get("/user/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipes = await pool.query(
+      "SELECT * FROM recipes WHERE user_id = $1",
+      [id]
+    );
+
+    for (let recipe of recipes) {
+      const stars = await pool.query(
+        "SELECT * FROM user_stars WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const views = await pool.query(
+        "SELECT * FROM recipe_views WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const comments = await pool.query(
+        "SELECT * FROM user_comments WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const average = getAverageRatingByRecipeId(recipe.recipe_id);
+
+      recipe.stars = stars.rows;
+      recipe.views = views.rows;
+      recipe.comments = comments.rows;
+      recipe.rating = average;
+    }
+
+    res.status(200).json(recipes.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
