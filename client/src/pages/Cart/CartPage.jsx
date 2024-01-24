@@ -3,11 +3,13 @@ import useApi from "../../hooks/useApi";
 import { useEffect } from "react";
 import Loading from "../Loading/Loading";
 import { useState } from "react";
-
+import DeleteCart from "../../components/Cart/DeleteCart/DeleteCart";
+import Container from "@mui/material/Container";
 export default function CartPage() {
-  const [cart, setCart] = useState(null);
+  const [refresh, setRefresh] = useState(false);
   const {
     data: cartData,
+    setData: setCart,
     loading,
     request,
     success,
@@ -19,24 +21,28 @@ export default function CartPage() {
     async function fetchCart() {
       try {
         await request();
-        setCart(cartData);
       } catch (error) {
         console.log(error);
       }
     }
     fetchCart();
-  }, [success]);
+  }, [success, refresh]);
+
+  function handleRefresh() {
+    setRefresh(!refresh);
+  }
 
   function filterItem(recipe_id) {
-    const newCart = cart.filter((item) => item.recipe_id !== recipe_id);
+    const newCart = cartData.filter((item) => item.recipe_id !== recipe_id);
     setCart(newCart);
   }
 
   if (loading) return <Loading />;
 
   return (
-    <>
-      <Cart cart={cart} removeItem={filterItem} />
-    </>
+    <Container>
+      <Cart cart={cartData} removeItem={filterItem} />
+      <DeleteCart refreshCart={handleRefresh} />
+    </Container>
   );
 }

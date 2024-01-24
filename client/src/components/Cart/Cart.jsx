@@ -1,8 +1,7 @@
 import React from "react";
 import Stack from "@mui/material/Stack";
 import Typography from "@mui/material/Typography";
-import RecipeCard from "../RecipeCard/RecipeCard";
-import Container from "@mui/material/Container";
+
 import CartItem from "./CartItem/CartItem";
 
 export default function Cart({ cart, removeItem }) {
@@ -25,11 +24,9 @@ export default function Cart({ cart, removeItem }) {
   );
 
   return (
-    <Container>
-      <Stack spacing={2}>
-        <Typography variant="h5">Cart</Typography>
-        {cartView}
-      </Stack>
-    </Container>
+    <Stack spacing={2}>
+      <Typography variant="h5">Cart</Typography>
+      {cartView}
+    </Stack>
   );
 }
