@@ -147,6 +147,9 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
       } else {
         setFormErrors({});
       }
+      const newTags = tags.map((tag) => {
+        return tag.tag;
+      });
 
       const formattedRecipe = {
         title: recipe.title,
@@ -159,10 +162,11 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
         difficulty_level: recipe.difficulty,
         ingredients: ingredients,
         instructions: instructions,
-        tags: tags,
+        tags: newTags,
       };
 
       setFormattedRecipe(formattedRecipe);
+
       console.log(formattedRecipe);
 
       // Todo: send recipe, support image upload, add loading indicator
@@ -172,8 +176,11 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
       }
       if (isFork && !inputRecipe) {
         console.error("Cannot fork a new recipe");
-      } else {
+      }
+      if (!isFork) {
         await sendRecipeRequest();
+      } else {
+        console.error("Dunno how you did this");
       }
     } catch (error) {
       console.error(error);
@@ -185,6 +192,7 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
       navigate(`/recipe/${newRecipe?.recipe_id}`);
     }
     if (forkSuccess) {
+      console.log(forkedRecipe);
       navigate(`/recipe/${forkedRecipe?.recipe_id}`);
     }
   }, [success, forkSuccess]);

@@ -611,51 +611,49 @@ router.post("/fork/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
+    const {
+      title,
+      description,
+      image,
+      tags,
+      preparation_time,
+      cooking_time,
+      servings,
+      difficulty_level,
+      ingredients,
+      instructions,
+    } = req.body;
+
     const recipe = await pool.query(
       "SELECT * FROM recipes WHERE recipe_id = $1",
       [id]
     );
-
-    const ingredients = await pool.query(
-      "SELECT * FROM ingredients WHERE recipe_id = $1",
-      [id]
-    );
-
-    const instructions = await pool.query(
-      "SELECT * FROM instructions WHERE recipe_id = $1",
-      [id]
-    );
-
-    const tags = await pool.query(
-      "SELECT * FROM recipe_tags WHERE recipe_id = $1",
-      [id]
-    );
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
 
     const recipeObject = {
-      recipe_id: recipe.rows[0].recipe_id,
-      title: recipe.rows[0].title,
-      description: recipe.rows[0].description,
-      user_id: recipe.rows[0].user_id,
-      image: recipe.rows[0].image,
-      preparation_time: recipe.rows[0].preparation_time,
-      cooking_time: recipe.rows[0].cooking_time,
-      tags: recipe.rows[0].tags,
-      servings: recipe.rows[0].servings,
-      difficulty_level: recipe.rows[0].difficulty_level,
-      ingredients: ingredients.rows,
-      instructions: instructions.rows,
+      title,
+      description,
+      image,
+      tags,
+      preparation_time,
+      cooking_time,
+      servings,
+      difficulty_level,
+      ingredients,
+      instructions,
     };
 
     //Create new recipe and recipe version
 
     const newRecipe = await pool.query(
-      "INSERT INTO recipes (title, description, user_id, image, preparation_time, cooking_time, servings, difficulty_level, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *",
+      "INSERT INTO recipes (title, description, user_id, image, preparation_time, cooking_time, servings, difficulty_level, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
       [
         recipeObject.title,
         recipeObject.description,
         req.user.user_id,
         recipeObject.image,
-
         recipeObject.preparation_time,
         recipeObject.cooking_time,
         recipeObject.servings,
@@ -664,10 +662,33 @@ router.post("/fork/:id", async (req, res) => {
       ]
     );
 
-    const newRecipeTags = await pool.query(
-      "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
-      [newRecipe.rows[0].recipe_id, tags.rows[0].tag]
-    );
+    //Create ingredients
+
+    recipeObject.ingredients.forEach(async (ingredient) => {
+      const { name, quantity, unit } = ingredient;
+      const newIngredient = await pool.query(
+        "INSERT INTO ingredients (recipe_id, name, quantity, unit) VALUES ($1, $2, $3, $4) RETURNING *",
+        [newRecipe.rows[0].recipe_id, name, quantity, unit]
+      );
+    });
+
+    //Create instructions
+
+    recipeObject.instructions.forEach(async (instruction) => {
+      const { step_number, description, image } = instruction;
+      const newInstruction = await pool.query(
+        "INSERT INTO instructions (recipe_id, step_number, description, image) VALUES ($1, $2, $3, $4) RETURNING *",
+        [newRecipe.rows[0].recipe_id, step_number, description, image]
+      );
+    });
+
+    recipeObject.tags.forEach(async (tag) => {
+      tag = _.startCase(tag);
+      const newTag = await pool.query(
+        "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
+        [newRecipe.rows[0].recipe_id, tag]
+      );
+    });
 
     //Get old recipe version number (if exists)
 
@@ -687,7 +708,7 @@ router.post("/fork/:id", async (req, res) => {
       [id, versionNumber, newRecipe.rows[0].recipe_id]
     );
 
-    res.status(200).json(recipeObject);
+    res.status(200).json(newRecipe.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -787,6 +808,28 @@ router.get("/versions/:id", async (req, res) => {
     );
 
     res.status(200).json(recipeVersions.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get original recipe of recipe version
+
+router.get("/versions/original/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    const originalRecipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [recipeVersion.rows[0].original_recipe_id]
+    );
+
+    res.status(200).json(originalRecipe.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
