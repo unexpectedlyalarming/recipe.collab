@@ -15,6 +15,8 @@ export default function CategoriesPage() {
 
   const [filter, setFilter] = useState(queryParams.get("tag") || "");
 
+  const [tagQuery, setTagQuery] = useState("");
+
   const page = 1;
   const limit = 20;
 
@@ -28,7 +30,7 @@ export default function CategoriesPage() {
     loading: tagsLoading,
     request: tagsRequest,
   } = useApi({
-    url: `/recipe/tags/${page}/${limit}/`,
+    url: `/recipe/tags/${page}/${limit}/${tagQuery}`,
   });
 
   const {
@@ -60,7 +62,7 @@ export default function CategoriesPage() {
       }
     }
     fetchTags();
-  }, []);
+  }, [tagQuery]);
 
   useEffect(() => {
     if (queryParams.get("tag")) {
@@ -70,7 +72,12 @@ export default function CategoriesPage() {
 
   return (
     <Container>
-      <CategoriesFilters tags={tags} setFilter={updateFilter} filter={filter} />
+      <CategoriesFilters
+        tags={tags}
+        setFilter={updateFilter}
+        filter={filter}
+        setTagQuery={setTagQuery}
+      />
       {loading ? <Loading /> : <CategoriesView recipes={recipesData} />}
     </Container>
   );
