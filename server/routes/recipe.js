@@ -837,7 +837,7 @@ router.get("/user/:id", async (req, res) => {
       [id]
     );
 
-    for (let recipe of recipes) {
+    for (let recipe of recipes.rows) {
       const stars = await pool.query(
         "SELECT * FROM user_stars WHERE recipe_id = $1",
         [recipe.recipe_id]

@@ -4,7 +4,7 @@ import Typography from "@mui/material/Typography";
 import Stack from "@mui/material/Stack";
 
 export default function RecipeCollection({ recipes }) {
-  const recipeView = recipes ? (
+  const recipeView = recipes?.length ? (
     recipes.map((recipe) => {
       return (
         <Grid item xs={12} sm={6} md={4} lg={3} key={recipe.recipe_id}>

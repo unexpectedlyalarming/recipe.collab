@@ -8,8 +8,10 @@ import Button from "@mui/material/Button";
 import { Link } from "react-router-dom";
 import Stack from "@mui/material/Stack";
 import Container from "@mui/material/Container";
+import { useParams } from "react-router-dom";
 export default function ProfileRecipes() {
   const { user } = useContext(UserContext);
+  const { id } = useParams();
 
   const {
     data: recipes,
@@ -30,18 +32,19 @@ export default function ProfileRecipes() {
     fetchRecipes();
   }, []);
 
+  const createRecipeView = (
+    <Stack spacing={2} sx={{ justifyContent: "center", alignItems: "center" }}>
+      <Button variant="contained" component={Link} to="/recipe/create">
+        Create Recipe
+      </Button>
+    </Stack>
+  );
+
   if (loading) return <Loading />;
 
   return (
     <Container>
-      <Stack
-        spacing={2}
-        sx={{ justifyContent: "center", alignItems: "center" }}
-      >
-        <Button variant="contained" component={Link} to="/recipe/create">
-          Create Recipe
-        </Button>
-      </Stack>
+      {user?.user_id == id && createRecipeView}
       <RecipeCollection recipes={recipes} />
     </Container>
   );
