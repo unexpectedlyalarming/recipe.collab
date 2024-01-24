@@ -122,6 +122,7 @@ export default function Comments({ id }) {
         onChange={(e) => setComment({ comment: e.target.value, replyTo: null })}
         id="none"
       />
+
       <Button onClick={sendComment}>Submit</Button>
       {newCommentLoading && <CircularProgress />}
     </Stack>
@@ -150,7 +151,13 @@ export default function Comments({ id }) {
         marginTop: "5rem",
       }}
     >
-      <Stack>
+      <Stack
+        sx={{
+          justifyContent: "center",
+          alignItems: "center",
+          marginBottom: "1rem",
+        }}
+      >
         <IconButton onClick={toggleComment}>
           <CommentIcon />
         </IconButton>
@@ -178,10 +185,11 @@ export default function Comments({ id }) {
             {item.username}
           </Typography>
           <Typography variant="p">{item.comment}</Typography>
-
-          <IconButton value={item.comment_id} onClick={replyComment}>
-            <ReplyIcon />
-          </IconButton>
+          <Stack direction="row">
+            <IconButton value={item.comment_id} onClick={replyComment}>
+              <ReplyIcon />
+            </IconButton>
+          </Stack>
           {selectedComment == item.comment_id && replyBox}
         </Stack>
       ))}

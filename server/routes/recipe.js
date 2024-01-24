@@ -344,7 +344,7 @@ router.get("/sort/views/:page/:limit", async (req, res) => {
 
 router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
   try {
-    let { page, limit } = req.params;
+    let { page, limit, tag } = req.params;
 
     page = page ? page : 1;
     limit = limit ? limit : 20;
@@ -377,7 +377,7 @@ router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
       recipe.rating = average;
     }
 
-    res.status(200).json(recipes);
+    res.status(200).json(recipes.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -846,7 +846,7 @@ router.get("/tags/:page/:limit/:query?", async (req, res) => {
 
     const offset = (page - 1) * limit;
     //decode uri
-    query = _.startCase(decodeURIComponent(query));
+    query = query ? _.startCase(decodeURIComponent(query)) : null;
     console.log(query);
 
     let tags;

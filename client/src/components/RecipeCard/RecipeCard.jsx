@@ -78,7 +78,7 @@ export default function RecipeCard({ recipe }) {
         </IconButton>
         <Chip color="secondary" label={recipe?.difficulty_level} />
       </CardActions>
-      <CardActions>
+      <CardActions spacing={2}>
         {recipe?.tags?.map((tag) => (
           <Chip
             key={tag}
