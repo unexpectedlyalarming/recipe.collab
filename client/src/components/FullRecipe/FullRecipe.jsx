@@ -26,6 +26,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../../contexts/userContext";
+import AddToCart from "./AddToCart/AddToCart";
 
 export default function FullRecipe({ id }) {
   const navigate = useNavigate();
@@ -154,6 +155,9 @@ export default function FullRecipe({ id }) {
             </Button>
           </Stack>
         )}
+        <Stack direction="row" spacing={2}>
+          <AddToCart recipeId={recipe?.recipe_id} />
+        </Stack>
 
         <Typography variant="h5">{recipe?.description}</Typography>
 

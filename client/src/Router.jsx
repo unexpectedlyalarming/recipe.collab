@@ -21,6 +21,7 @@ import theme from "./theme";
 import CreateRecipe from "./pages/Recipe/Create/CreateRecipe";
 import Profile from "./pages/Profile/Profile";
 import ProfileRecipes from "./pages/Profile/Recipes/ProfileRecipes";
+import CartPage from "./pages/Cart/CartPage";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -103,6 +104,10 @@ function Routers() {
         {
           path: "/user/:id",
           element: <Profile />,
+        },
+        {
+          path: "/cart",
+          element: <CartPage />,
         },
       ],
     },

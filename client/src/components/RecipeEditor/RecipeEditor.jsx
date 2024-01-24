@@ -14,6 +14,9 @@ import IngredientEditor from "./IngredientEditor/IngredientEditor";
 import InstructionEditor from "./InstructionEditor/InstructionEditor";
 import { FormHelperText } from "@mui/material";
 import TagEditor from "./TagEditor/TagEditor";
+import Checkbox from "@mui/material/Checkbox";
+import FormControlLabel from "@mui/material/FormControlLabel";
+import FormGroup from "@mui/material/FormGroup";
 
 export default function RecipeEditor({ inputRecipe, isFork }) {
   const navigate = useNavigate();
@@ -38,6 +41,8 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
   const [ingredients, setIngredients] = useState();
   const [instructions, setInstructions] = useState();
   const [tags, setTags] = useState();
+
+  const [originalImage, setOriginalImage] = useState(true);
 
   const [formattedRecipe, setFormattedRecipe] = useState();
 
@@ -151,6 +156,8 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
         return tag.tag;
       });
 
+      const image = originalImage ? inputRecipe?.image : null;
+
       const formattedRecipe = {
         title: recipe.title,
         description: recipe.description,
@@ -163,6 +170,7 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
         ingredients: ingredients,
         instructions: instructions,
         tags: newTags,
+        image: image,
       };
 
       setFormattedRecipe(formattedRecipe);
@@ -224,6 +232,17 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
           error={!!formErrors.description}
           helperText={formErrors.description}
         />
+        <FormGroup>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={originalImage}
+                onChange={(e) => setOriginalImage(e.target.checked)}
+              />
+            }
+            label="Use Original Image"
+          />
+        </FormGroup>
         <InputLabel id="prep-time-label">Prep Time*</InputLabel>
         <Stack direction="row" spacing={2}>
           <TextField
