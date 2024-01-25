@@ -16,6 +16,7 @@ import { useNavigate } from "react-router-dom";
 import Chip from "@mui/material/Chip";
 
 import CardActionArea from "@mui/material/CardActionArea";
+import RecipeStar from "./RecipeStar/RecipeStar";
 
 export default function RecipeCard({ recipe }) {
   const navigate = useNavigate();
@@ -52,14 +53,7 @@ export default function RecipeCard({ recipe }) {
         </CardContent>
       </CardActionArea>
       <CardActions disableSpacing>
-        <IconButton onClick={handleStar}>
-          <StarIcon
-            sx={{
-              color: starred ? "yellow" : "white",
-            }}
-          />
-          {recipe?.stars?.length}
-        </IconButton>
+        <RecipeStar recipe={recipe} />
         <IconButton
           onClick={() => {
             navigate(`/recipe/${recipe?.recipe_id}`);

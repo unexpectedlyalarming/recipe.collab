@@ -53,15 +53,19 @@ export default function useApi({
       if (response.data) {
         setData(response.data);
         setSuccess(true);
+        return response.data;
       } else if (response.data === false) {
         setData(false);
+        return false;
       } else {
         const error = new Error(response.data);
         setData(error.message);
+        return error;
       }
-      setLoading(false);
     } catch (err) {
       setData(err.response.data.message);
+      setLoading(false);
+    } finally {
       setLoading(false);
     }
   }

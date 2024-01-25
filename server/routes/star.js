@@ -29,13 +29,17 @@ router.put("/:id", async (req, res) => {
         "DELETE FROM user_stars WHERE recipe_id = $1 AND user_id = $2",
         [id, user_id]
       );
-      return res.status(200).json("Recipe was unstarred.");
+      //Unstar
+      return res.status(200).json(false);
     } else {
       await pool.query(
         "INSERT INTO user_stars (recipe_id, user_id) VALUES ($1, $2)",
         [id, user_id]
       );
-      return res.status(200).json("Recipe was starred.");
+      //Star
+
+      //Boolean for frontend ease of use
+      return res.status(200).json(true);
     }
   } catch (error) {
     return res.status(500).json({ error: error.message });
