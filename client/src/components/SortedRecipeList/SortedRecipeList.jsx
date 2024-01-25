@@ -25,7 +25,7 @@ export default function SortedRecipeList({ sortMethod, sortOption = null }) {
   }
 
   return (
-    <Carousel showThumbs={false}>
+    <Carousel showThumbs={false} infiniteLoop={true} showIndicators={false}>
       {recipes?.map((item, index) => (
         <RecipeCard recipe={item} key={index} />
       ))}

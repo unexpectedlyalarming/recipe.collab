@@ -11,6 +11,7 @@ import Loading from "../Loading/Loading";
 import { useContext } from "react";
 import { UserContext } from "../../contexts/userContext";
 import Badge from "@mui/material/Badge";
+import FollowCard from "../../components/Profile/FollowCard/FollowCard";
 
 export default function Profile() {
   const { id } = useParams();
@@ -75,6 +76,7 @@ export default function Profile() {
         <Typography variant="body1">
           Joined {user?.created_at.split("T", 1)}
         </Typography>
+        <FollowCard user={user} />
         {currentUser?.user_id === user?.user_id && (
           <Button variant="outlined" startIcon={<SettingsIcon />}>
             Edit Profile

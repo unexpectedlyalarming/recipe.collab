@@ -27,6 +27,7 @@ import { useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../../contexts/userContext";
 import AddToCart from "./AddToCart/AddToCart";
+import RecipeStar from "../RecipeCard/RecipeStar/RecipeStar";
 
 export default function FullRecipe({ id }) {
   const navigate = useNavigate();
@@ -137,9 +138,30 @@ export default function FullRecipe({ id }) {
     <Container>
       <Stack spacing={2}>
         <Typography variant="h2">{recipe?.title}</Typography>
-        <Typography variant="p" color="gray">
-          {recipe?.created_at.split("T")[0]}
-        </Typography>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="p" color="gray">
+            {recipe?.created_at.split("T")[0]}
+          </Typography>
+          <Typography
+            variant="p"
+            color="gray"
+            component={Link}
+            to={`/user/${recipe?.user_id}`}
+            sx={{
+              textDecoration: "none",
+            }}
+          >
+            Posted by {recipe?.username}
+          </Typography>
+        </Stack>
+
         {recipe?.image && <Image src={recipe?.image} alt={recipe?.title} />}
         <Stack direction="row" spacing={2}>
           {tags}
@@ -176,11 +198,15 @@ export default function FullRecipe({ id }) {
           Difficulty: {recipe?.difficulty_level}
         </Typography>
 
-        <Stack direction="row" spacing={2}>
-          <Typography variant="body2">
-            <StarIcon />
-            {recipe?.stars?.length}
-          </Typography>
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{
+            justifyContent: "start",
+            alignItems: "center",
+          }}
+        >
+          <RecipeStar recipe={recipe} />
           <Typography variant="body2">
             <CommentIcon />
             {recipe?.comments?.length}

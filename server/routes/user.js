@@ -48,6 +48,16 @@ router.get("/:id", async (req, res) => {
       [id]
     );
 
+    const followers = await pool.query(
+      "SELECT * FROM user_follows WHERE user_id = $1",
+      [id]
+    );
+
+    const following = await pool.query(
+      "SELECT * FROM user_follows WHERE follower_id = $1",
+      [id]
+    );
+
     const filteredUser = {
       username: user.rows[0].username,
       first_name: user.rows[0].first_name,
@@ -62,6 +72,8 @@ router.get("/:id", async (req, res) => {
       recipes: recipes.rows,
       stars: stars.rows,
       ratings: ratings.rows,
+      followers: followers.rows,
+      following: following.rows,
     };
 
     res.status(200).json(filteredUser);

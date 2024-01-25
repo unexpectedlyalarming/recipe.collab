@@ -67,6 +67,9 @@ app.use("/rating", verifyUser, ratingRouter);
 const cartRouter = require("./routes/cart");
 app.use("/cart", verifyUser, cartRouter);
 
+const followerRouter = require("./routes/follower");
+app.use("/follower", verifyUser, followerRouter);
+
 //User Activity Scheduler
 
 const scheduleUserActivityCheck = require("./utils/userActivityScheduler");
