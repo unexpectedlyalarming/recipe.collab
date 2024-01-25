@@ -37,7 +37,7 @@ export default function Nav() {
     setAnchorElUser(null);
   };
 
-  const pages = ["Home", "Categories", "Cart"];
+  const pages = ["Home", "Categories", "Search", "Cart"];
 
   const settings = [
     {

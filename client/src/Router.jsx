@@ -8,11 +8,10 @@ import { useEffect, useState } from "react";
 import Home from "./pages/Home/Home";
 import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { ThemeProvider } from "@mui/material/styles";
 import Loading from "./pages/Loading/Loading";
 import Nav from "./components/Nav/Nav";
 import NotFound from "./pages/404/NotFound";
-import useApi from "./hooks/useApi";
 import { UserProvider } from "./contexts/userContext";
 import axios from "axios";
 import RecipePage from "./pages/Recipe/RecipePage";
@@ -23,6 +22,7 @@ import Profile from "./pages/Profile/Profile";
 import ProfileRecipes from "./pages/Profile/Recipes/ProfileRecipes";
 import CartPage from "./pages/Cart/CartPage";
 import CategoriesPage from "./pages/Categories/CategoriesPage";
+import SearchPage from "./pages/Search/SearchPage";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -113,6 +113,10 @@ function Routers() {
         {
           path: "/categories",
           element: <CategoriesPage />,
+        },
+        {
+          path: "/search",
+          element: <SearchPage />,
         },
       ],
     },

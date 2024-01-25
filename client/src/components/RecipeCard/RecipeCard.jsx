@@ -40,7 +40,7 @@ export default function RecipeCard({ recipe }) {
         <CardMedia
           component="img"
           height="194"
-          image={recipe?.image}
+          image={recipe?.image || "/img/food.jpg"}
           alt={recipe?.title}
           sx={{
             height: "20rem",

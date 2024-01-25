@@ -340,7 +340,7 @@ router.get("/sort/views/:page/:limit", async (req, res) => {
   }
 });
 
-// Get recipes, sort by inputed tag, limit and paginate
+// Get recipes, filter by inputed tag, sort by stars, limit and paginate
 
 router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
   try {
@@ -361,6 +361,7 @@ router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
         "SELECT * FROM user_stars WHERE recipe_id = $1",
         [recipe.recipe_id]
       );
+
       const views = await pool.query(
         "SELECT * FROM recipe_views WHERE recipe_id = $1",
         [recipe.recipe_id]
@@ -377,7 +378,18 @@ router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
       recipe.rating = average;
     }
 
-    res.status(200).json(recipes.rows);
+    recipes.rows.sort((a, b) => {
+      return b.stars.length - a.stars.length;
+    });
+
+    const recipeCount = await pool.query(
+      "SELECT COUNT(*) FROM recipes WHERE $1 = ANY (tags)",
+      [tag]
+    );
+
+    const pageCount = Math.ceil(recipeCount.rows[0].count / limit);
+
+    res.status(200).json({ recipes: recipes.rows, pageCount });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -861,7 +873,6 @@ router.get("/tags/:page/:limit/:query?", async (req, res) => {
         [limit, offset]
       );
     }
-    //
 
     res.status(200).json(tags.rows);
   } catch (error) {
@@ -927,5 +938,91 @@ async function getAverageRatingByRecipeId(recipe_id) {
     return error;
   }
 }
+
+// Regex search for recipes
+
+router.get("/search/:query/:page/:limit/:sort?", async (req, res) => {
+  try {
+    let { query, page, limit, sort } = req.params;
+    page = page ? page : 1;
+    limit = limit ? limit : 20;
+
+    const offset = (page - 1) * limit;
+
+    query = query ? decodeURIComponent(query) : null;
+
+    if (!sort) {
+      sort = "date";
+    }
+
+    let recipes;
+
+    switch (sort) {
+      case "date":
+        recipes = await pool.query(
+          "SELECT * FROM recipes WHERE title ILIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+          [`%${query}%`, limit, offset]
+        );
+
+        break;
+      case "stars":
+        recipes = await pool.query(
+          "SELECT * FROM recipes WHERE title ILIKE $1 ORDER BY (SELECT COUNT(*) FROM user_stars WHERE user_stars.recipe_id = recipes.recipe_id) DESC LIMIT $2 OFFSET $3",
+          [`%${query}%`, limit, offset]
+        );
+        break;
+      case "views":
+        recipes = await pool.query(
+          "SELECT * FROM recipes WHERE title ILIKE $1 ORDER BY (SELECT COUNT(*) FROM recipe_views WHERE recipe_views.recipe_id = recipes.recipe_id) DESC LIMIT $2 OFFSET $3",
+          [`%${query}%`, limit, offset]
+        );
+        break;
+      case "forks":
+        recipes = await pool.query(
+          "SELECT * FROM recipes WHERE title ILIKE $1 ORDER BY (SELECT COUNT(*) FROM recipe_versions WHERE recipe_versions.original_recipe_id = recipes.recipe_id) DESC LIMIT $2 OFFSET $3",
+          [`%${query}%`, limit, offset]
+        );
+        break;
+      default:
+        recipes = await pool.query(
+          "SELECT * FROM recipes WHERE title ILIKE $1 ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+          [`%${query}%`, limit, offset]
+        );
+        break;
+    }
+
+    for (let recipe of recipes.rows) {
+      const stars = await pool.query(
+        "SELECT * FROM user_stars WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const views = await pool.query(
+        "SELECT * FROM recipe_views WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const comments = await pool.query(
+        "SELECT * FROM user_comments WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const average = getAverageRatingByRecipeId(recipe.recipe_id);
+
+      recipe.stars = stars.rows;
+      recipe.views = views.rows;
+      recipe.comments = comments.rows;
+      recipe.rating = average;
+    }
+
+    const recipeCount = await pool.query(
+      "SELECT COUNT(*) FROM recipes WHERE title ILIKE $1",
+      [`%${query}%`]
+    );
+
+    const pageCount = Math.ceil(recipeCount.rows[0].count / limit);
+
+    res.status(200).json({ recipes: recipes.rows, pageCount });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
