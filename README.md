@@ -11,7 +11,8 @@ Currently a temporary name, recipe.collab is a work-in-progress recipe site that
 
 1. [Installation](#installation)
 2. [Features](#features)
-3. [License](#license)
+3. [Known Issues & Deprecated Features](#known-issues)
+5. [License](#license)
 
 
 # Installation 
@@ -78,6 +79,16 @@ Carts let you save recipes for your next meal plan. In the current roadmap, the 
 ### Various user features
 Along with these, you can expect plenty of useful features like filtering by tags; stars, comments, lists, etc.
 
+# Known Issues
+## (and deprecated features)
+
+- Ratings show up throughout the codebase but they aren't in use. Eventually they will be removed
+
+### XYZ feature does not show up
+While the backend API is pretty fleshed out, the frontend has some stuff with missing functionality. It should be added eventually.
+
+## Is something here missing?
+Submit an issue here on Github.
 
 # License
 
