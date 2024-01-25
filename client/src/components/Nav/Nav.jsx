@@ -49,8 +49,8 @@ export default function Nav() {
       link: "/lists",
     },
     {
-      name: "My Recipes",
-      link: `/user/recipes/${user?.user_id}`,
+      name: "Starred Recipes",
+      link: `/user/starred`,
     },
     {
       name: "Logout",

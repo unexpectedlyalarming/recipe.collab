@@ -55,7 +55,37 @@ router.get("/user/:userId", async (req, res) => {
       "SELECT * FROM user_stars WHERE user_id = $1",
       [userId]
     );
-    res.status(200).json(starredRecipes.rows);
+
+    const starredRecipeIds = starredRecipes.rows.map(
+      (recipe) => recipe.recipe_id
+    );
+
+    const recipes = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = ANY($1)",
+      [starredRecipeIds]
+    );
+    for (let recipe of recipes.rows) {
+      const stars = await pool.query(
+        "SELECT * FROM user_stars WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      const views = await pool.query(
+        "SELECT * FROM recipe_views WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      const comments = await pool.query(
+        "SELECT * FROM user_comments WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      recipe.stars = stars.rows;
+      recipe.views = views.rows;
+      recipe.comments = comments.rows;
+    }
+
+    res.status(200).json(recipes.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

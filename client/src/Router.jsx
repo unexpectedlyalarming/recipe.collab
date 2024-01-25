@@ -23,6 +23,7 @@ import ProfileRecipes from "./pages/Profile/Recipes/ProfileRecipes";
 import CartPage from "./pages/Cart/CartPage";
 import CategoriesPage from "./pages/Categories/CategoriesPage";
 import SearchPage from "./pages/Search/SearchPage";
+import StarredRecipes from "./pages/Profile/Starred/StarredRecipes";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -99,8 +100,8 @@ function Routers() {
           element: <CreateRecipe />,
         },
         {
-          path: "/user/recipes/:id",
-          element: <ProfileRecipes />,
+          path: "/user/starred",
+          element: <StarredRecipes />,
         },
         {
           path: "/user/:id",
