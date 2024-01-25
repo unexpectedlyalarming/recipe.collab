@@ -24,16 +24,16 @@ export default function AddToCart({ recipeId }) {
   useEffect(() => {
     async function fetchCart() {
       try {
-        await request();
+        const response = await request();
+
+        if (response) {
+          setAdded(true);
+        }
       } catch (error) {
         console.log(error);
       }
     }
     fetchCart();
-
-    if (recipeInCart) {
-      setAdded(true);
-    }
   }, []);
 
   //add to cart

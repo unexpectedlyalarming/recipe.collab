@@ -93,9 +93,13 @@ export default function CategoriesPage() {
         filter={filter}
         setTagQuery={setTagQuery}
       />
-      {loading ? <Loading /> : <CategoriesView recipes={recipesData.recipes} />}
+      {loading ? (
+        <Loading />
+      ) : (
+        <CategoriesView recipes={recipesData?.recipes} />
+      )}
       <Pagination
-        count={recipesData.pageCount}
+        count={recipesData?.pageCount}
         page={page}
         onChange={(e, value) => setPage(value)}
       />

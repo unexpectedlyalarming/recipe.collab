@@ -17,7 +17,7 @@ import { UserContext } from "../../contexts/userContext";
 export default function Comments({ id }) {
   const { user } = useContext(UserContext);
   const [comment, setComment] = useState("");
-  const [selectedComment, setSelectedComment] = useState(null);
+  const [selectedComment, setSelectedComment] = useState("none");
   const {
     data: comments,
     loading,
@@ -34,29 +34,23 @@ export default function Comments({ id }) {
     try {
       if (selectedComment == "none") {
         setSelectedComment(null);
-      } else if (selectedComment) {
-        setSelectedComment("none");
-      } else if (!selectedComment) {
+      } else {
         setSelectedComment("none");
       }
-      setComment({ comment: "", replyTo: null });
+      setComment({ comment: "", reply_to: null });
     } catch (error) {
       console.error(error);
     }
   }
 
-  async function replyComment(e) {
+  async function replyComment(commentId) {
     try {
-      const targetValue = e.target.value;
-
-      if (targetValue == selectedComment) {
+      if (commentId == selectedComment) {
         setSelectedComment(null);
-      } else if (selectedComment) {
-        setSelectedComment(targetValue);
-      } else if (!selectedComment) {
-        setSelectedComment(targetValue);
+      } else {
+        setSelectedComment(commentId);
       }
-      setComment({ comment: "", replyTo: null });
+      setComment({ comment: "", reply_to: null });
     } catch (error) {
       console.error(error);
     }
@@ -76,12 +70,12 @@ export default function Comments({ id }) {
   async function sendComment(e) {
     try {
       const targetValue = e.target.value;
-      setComment({ comment: comment, replyTo: null });
+      setComment({ comment: comment, reply_to: null });
 
       if (targetValue == "none") {
-        setComment({ comment: comment, replyTo: null });
+        setComment({ comment: comment, reply_to: null });
       } else if (targetValue) {
-        setComment({ comment: comment, replyTo: targetValue });
+        setComment({ comment: comment, reply_to: targetValue });
       }
 
       await sendCommentRequest();
@@ -93,13 +87,14 @@ export default function Comments({ id }) {
   useEffect(() => {
     async function handleNewComment() {
       if (success) {
-        setComment({ comment: "", replyTo: null });
+        setComment({ comment: "", reply_to: null });
 
         const newCommentObject = {
           comment_id: newComment.comment_id,
           comment: newComment.comment,
           user_id: newComment.user_id,
           username: user.username,
+          reply_to: newComment.reply_to,
         };
 
         comments.push(newCommentObject);
@@ -119,7 +114,9 @@ export default function Comments({ id }) {
         multiline
         rows={4}
         value={comment?.comment}
-        onChange={(e) => setComment({ comment: e.target.value, replyTo: null })}
+        onChange={(e) =>
+          setComment({ comment: e.target.value, reply_to: null })
+        }
         id="none"
       />
 
@@ -136,9 +133,9 @@ export default function Comments({ id }) {
         rows={4}
         value={comment?.comment}
         onChange={(e) =>
-          setComment({ comment: e.target.value, replyTo: selectedComment })
+          setComment({ comment: e.target.value, reply_to: selectedComment })
         }
-        id={selectedComment}
+        id={selectedComment?.toString()}
       />
       <Button onClick={sendComment}>Submit</Button>
       {newCommentLoading && <CircularProgress />}
@@ -184,9 +181,26 @@ export default function Comments({ id }) {
           >
             {item.username}
           </Typography>
+          {item.reply_to && (
+            <Typography variant="p">
+              Replying to:{" "}
+              <Typography
+                variant="p"
+                component={Link}
+                to={`/user/${item.reply_to}`}
+                sx={{
+                  textDecoration: "none",
+                  color: "inherit",
+                  fontWeight: 700,
+                }}
+              >
+                {item?.reply_to_username}
+              </Typography>
+            </Typography>
+          )}
           <Typography variant="p">{item.comment}</Typography>
           <Stack direction="row">
-            <IconButton value={item.comment_id} onClick={replyComment}>
+            <IconButton onClick={() => replyComment(item.comment_id)}>
               <ReplyIcon />
             </IconButton>
           </Stack>

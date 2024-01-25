@@ -178,7 +178,7 @@ export default function FullRecipe({ id }) {
           </Stack>
         )}
         <Stack direction="row" spacing={2}>
-          <AddToCart recipeId={recipe?.recipe_id} />
+          {recipe?.recipe_id && <AddToCart recipeId={recipe?.recipe_id} />}
         </Stack>
 
         <Typography variant="h5">{recipe?.description}</Typography>

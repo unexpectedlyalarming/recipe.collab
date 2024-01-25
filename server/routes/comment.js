@@ -32,6 +32,15 @@ router.get("/recipe/:id", async (req, res) => {
       );
       let username = usernames.rows[0].username;
       comment.username = username;
+
+      if (comment.reply_to) {
+        let replyUsernames = await pool.query(
+          "SELECT username FROM users WHERE user_id = $1",
+          [comment.reply_to]
+        );
+        let replyUsername = replyUsernames.rows[0].username;
+        comment.reply_to_username = replyUsername;
+      }
     }
     res.status(200).json(comments.rows);
   } catch (error) {
