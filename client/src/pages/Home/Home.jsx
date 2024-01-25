@@ -29,9 +29,14 @@ export default function Home() {
         best/most popular so it will probably end up
         commented out (maybe by time anyone else reads this).
         */}
-      <Stack spacing={4}>
+      {/* <Stack spacing={4}>
         <Typography variant="h2">Highest Rated</Typography>
         <SortedRecipeList sortMethod="rating" />
+      </Stack> */}
+
+      <Stack spacing={4}>
+        <Typography variant="h2">Following</Typography>
+        <SortedRecipeList sortMethod="following" />
       </Stack>
     </Container>
   );

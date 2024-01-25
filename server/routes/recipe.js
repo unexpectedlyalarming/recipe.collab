@@ -340,6 +340,57 @@ router.get("/sort/views/:page/:limit", async (req, res) => {
   }
 });
 
+// Get recipes, filter by following, sort by date, limit and paginate
+
+router.get("/sort/following/:page/:limit", async (req, res) => {
+  try {
+    let { page, limit } = req.params;
+
+    page = page ? page : 1;
+    limit = limit ? limit : 20;
+
+    const offset = (page - 1) * limit;
+
+    const following = await pool.query(
+      "SELECT * FROM user_follows WHERE follower_id = $1",
+      [req.user.user_id]
+    );
+    console.log(following.rows);
+    const followingIds = following.rows.map((follow) => follow.user_id);
+
+    const recipes = await pool.query(
+      "SELECT * FROM recipes WHERE user_id = ANY($1) ORDER BY created_at DESC LIMIT $2 OFFSET $3",
+      [followingIds, limit, offset]
+    );
+
+    for (let recipe of recipes.rows) {
+      const stars = await pool.query(
+        "SELECT * FROM user_stars WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const views = await pool.query(
+        "SELECT * FROM recipe_views WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      const comments = await pool.query(
+        "SELECT * FROM user_comments WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      const average = getAverageRatingByRecipeId(recipe.recipe_id);
+
+      recipe.stars = stars.rows;
+      recipe.views = views.rows;
+      recipe.comments = comments.rows;
+      recipe.rating = average;
+    }
+
+    res.status(200).json(recipes.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Get recipes, filter by inputed tag, sort by stars, limit and paginate
 
 router.get("/sort/tag/:tag/:page/:limit", async (req, res) => {
