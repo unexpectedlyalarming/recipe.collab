@@ -12,7 +12,8 @@ import { useContext } from "react";
 import { UserContext } from "../../contexts/userContext";
 import Badge from "@mui/material/Badge";
 import FollowCard from "../../components/Profile/FollowCard/FollowCard";
-
+import ProfileRecipes from "./Recipes/ProfileRecipes";
+import Divider from "@mui/material/Divider";
 export default function Profile() {
   const { id } = useParams();
 
@@ -49,6 +50,7 @@ export default function Profile() {
         sx={{
           alignItems: "center",
           justifyContent: "center",
+          padding: "2rem",
         }}
       >
         <Badge
@@ -83,6 +85,8 @@ export default function Profile() {
           </Button>
         )}
       </Stack>
+      <Divider />
+      <ProfileRecipes recipes={user?.recipes} />
     </Container>
   );
 }

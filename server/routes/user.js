@@ -58,6 +58,29 @@ router.get("/:id", async (req, res) => {
       [id]
     );
 
+    for (let recipe of recipes.rows) {
+      const stars = await pool.query(
+        "SELECT * FROM user_stars WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      const views = await pool.query(
+        "SELECT * FROM recipe_views WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      const comments = await pool.query(
+        "SELECT * FROM user_comments WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+
+      recipe.stars = stars.rows;
+
+      recipe.views = views.rows;
+
+      recipe.comments = comments.rows;
+    }
+
     const filteredUser = {
       username: user.rows[0].username,
       first_name: user.rows[0].first_name,
