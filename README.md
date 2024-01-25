@@ -27,9 +27,6 @@ It is HIGHLY recommended to check the server and db files for environmental vari
 
 There are also variables for your database, secret keys, etc.
 
-Currently only the API has been developed. To run it clone the repo and do the following:
-
-
 ```bash
 cd recipe.collab
 cd server
