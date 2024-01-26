@@ -28,6 +28,7 @@ import { useContext } from "react";
 import { UserContext } from "../../contexts/userContext";
 import AddToCart from "./AddToCart/AddToCart";
 import RecipeStar from "../RecipeCard/RecipeStar/RecipeStar";
+import ForkButton from "./ForkButton/ForkButton";
 
 export default function FullRecipe({ id }) {
   const navigate = useNavigate();
@@ -46,6 +47,8 @@ export default function FullRecipe({ id }) {
   const { user } = useContext(UserContext);
 
   const [isForksOpen, setIsForksOpen] = useState(false);
+
+  const forkOfUserRecipe = recipe?.isForkOfCurrentUser;
 
   function formatTime(time) {
     let timeString = "";
@@ -239,6 +242,8 @@ export default function FullRecipe({ id }) {
           </Typography>
         </Stack>
         {isForksOpen && forksView}
+
+        <ForkButton forkOfUserRecipe={forkOfUserRecipe} />
 
         <Typography variant="h4">Ingredients</Typography>
 

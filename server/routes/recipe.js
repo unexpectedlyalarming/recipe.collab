@@ -511,6 +511,16 @@ router.get("/:id", addView, async (req, res) => {
       : 1;
 
     const forks = [...originalRecipeForks.rows, ...recipeVersionForks.rows];
+
+    const originalRecipeId = recipeVersion.rows[0].original_recipe_id;
+    const getUserIdFromRecipeId = await pool.query(
+      "SELECT user_id FROM recipes WHERE recipe_id = $1",
+      [originalRecipeId]
+    );
+
+    const isForkOfCurrentUser =
+      getUserIdFromRecipeId.rows[0].user_id === req.user.user_id;
+
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
       title: recipe.rows[0].title,
@@ -536,6 +546,7 @@ router.get("/:id", addView, async (req, res) => {
       rating: average,
       forks,
       version_number,
+      isForkOfCurrentUser,
     };
 
     res.status(200).json(recipeObject);
@@ -1039,45 +1050,6 @@ router.get("/search/:query/:page/:limit/:sort?", async (req, res) => {
 
 // RECIPE FORK RELATED ROUTES
 
-// Get recipe versions of original recipe
-
-router.get("/versions/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const recipeVersions = await pool.query(
-      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
-      [id]
-    );
-
-    res.status(200).json(recipeVersions.rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get original recipe of recipe version
-
-router.get("/versions/original/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const recipeVersion = await pool.query(
-      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
-      [id]
-    );
-
-    const originalRecipe = await pool.query(
-      "SELECT * FROM recipes WHERE recipe_id = $1",
-      [recipeVersion.rows[0].original_recipe_id]
-    );
-
-    res.status(200).json(originalRecipe.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Get unaccepted recipe versions for user
 
 router.get("/versions/unaccepted", async (req, res) => {
@@ -1089,7 +1061,17 @@ router.get("/versions/unaccepted", async (req, res) => {
       [userId]
     );
 
-    res.status(200).json(recipeVersions.rows);
+    const recipes = [];
+
+    for (let recipe of recipeVersions.rows) {
+      const newRecipe = await pool.query(
+        "SELECT * FROM recipes WHERE recipe_id = $1",
+        [recipe.recipe_id]
+      );
+      recipes.push(newRecipe.rows[0]);
+    }
+
+    res.status(200).json(recipes);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1216,4 +1198,42 @@ router.patch("/versions/accept/:id", async (req, res) => {
   }
 });
 
+// Get recipe versions of original recipe
+
+router.get("/versions/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeVersions = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
+      [id]
+    );
+
+    res.status(200).json(recipeVersions.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get original recipe of recipe version
+
+router.get("/versions/original/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    const originalRecipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [recipeVersion.rows[0].original_recipe_id]
+    );
+
+    res.status(200).json(originalRecipe.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;

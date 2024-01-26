@@ -63,7 +63,7 @@ export default function useApi({
         return error;
       }
     } catch (err) {
-      setData(err.response.data.message);
+      setData(err?.response?.data?.message || err.message);
       setLoading(false);
     } finally {
       setLoading(false);
