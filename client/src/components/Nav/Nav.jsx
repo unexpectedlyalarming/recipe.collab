@@ -53,6 +53,10 @@ export default function Nav() {
       link: `/user/starred`,
     },
     {
+      name: "Review Forks",
+      link: `/user/forks`,
+    },
+    {
       name: "Logout",
       link: "/logout",
     },

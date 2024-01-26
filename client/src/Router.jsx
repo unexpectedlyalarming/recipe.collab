@@ -24,6 +24,7 @@ import CartPage from "./pages/Cart/CartPage";
 import CategoriesPage from "./pages/Categories/CategoriesPage";
 import SearchPage from "./pages/Search/SearchPage";
 import StarredRecipes from "./pages/Profile/Starred/StarredRecipes";
+import ForksPage from "./pages/Profile/Forks/ForksPage";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -102,6 +103,10 @@ function Routers() {
         {
           path: "/user/starred",
           element: <StarredRecipes />,
+        },
+        {
+          path: "user/forks",
+          element: <ForksPage />,
         },
         {
           path: "/user/:id",

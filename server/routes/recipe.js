@@ -859,45 +859,6 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
-// Get recipe versions of original recipe
-
-router.get("/versions/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const recipeVersions = await pool.query(
-      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
-      [id]
-    );
-
-    res.status(200).json(recipeVersions.rows);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Get original recipe of recipe version
-
-router.get("/versions/original/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const recipeVersion = await pool.query(
-      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
-      [id]
-    );
-
-    const originalRecipe = await pool.query(
-      "SELECT * FROM recipes WHERE recipe_id = $1",
-      [recipeVersion.rows[0].original_recipe_id]
-    );
-
-    res.status(200).json(originalRecipe.rows[0]);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
 // Get count of all tags, sorted by count (desc), limit and paginate. Return count and tag name.
 
 router.get("/tags/:page/:limit/:query?", async (req, res) => {
@@ -1071,6 +1032,185 @@ router.get("/search/:query/:page/:limit/:sort?", async (req, res) => {
     const pageCount = Math.ceil(recipeCount.rows[0].count / limit);
 
     res.status(200).json({ recipes: recipes.rows, pageCount });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// RECIPE FORK RELATED ROUTES
+
+// Get recipe versions of original recipe
+
+router.get("/versions/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeVersions = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
+      [id]
+    );
+
+    res.status(200).json(recipeVersions.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get original recipe of recipe version
+
+router.get("/versions/original/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    const originalRecipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [recipeVersion.rows[0].original_recipe_id]
+    );
+
+    res.status(200).json(originalRecipe.rows[0]);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Get unaccepted recipe versions for user
+
+router.get("/versions/unaccepted", async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    const recipeVersions = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id IN (SELECT recipe_id FROM recipes WHERE user_id = $1) AND recipe_id NOT IN (SELECT recipe_id FROM recipes WHERE user_id = $1)",
+      [userId]
+    );
+
+    res.status(200).json(recipeVersions.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Accept recipe version/merge
+
+router.patch("/versions/accept/:id", async (req, res) => {
+  try {
+    const userId = req.user.user_id;
+
+    const { id } = req.params;
+
+    const recipeVersion = await pool.query(
+      "SELECT * FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    const originalRecipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [recipeVersion.rows[0].original_recipe_id]
+    );
+
+    const recipe = await pool.query(
+      "SELECT * FROM recipes WHERE recipe_id = $1",
+      [id]
+    );
+
+    if (recipe.rows.length === 0) {
+      return res.status(400).json({ msg: "Recipe does not exist." });
+    }
+
+    if (originalRecipe.rows[0].user_id !== userId) {
+      return res.status(401).json({ msg: "Not authorized." });
+    }
+
+    const updatedRecipe = await pool.query(
+      "UPDATE recipes SET title = $1, description = $2, user_id = $3, image = $4, tags = $5, preparation_time = $6, cooking_time = $7, servings = $8, difficulty_level = $9, updated_at = $10, tags = $11 WHERE recipe_id = $12 RETURNING *",
+      [
+        recipe.rows[0].title,
+        recipe.rows[0].description,
+        recipe.rows[0].user_id,
+        recipe.rows[0].image,
+        recipe.rows[0].preparation_time,
+        recipe.rows[0].cooking_time,
+        recipe.rows[0].servings,
+        recipe.rows[0].difficulty_level,
+        recipe.rows[0].updated_at,
+        recipe.rows[0].tags,
+        recipe.rows[0].recipe_id,
+      ]
+    );
+
+    //Update ingredients
+
+    const ingredients = await pool.query(
+      "SELECT * FROM ingredients WHERE recipe_id = $1",
+      [id]
+    );
+
+    ingredients.rows.forEach(async (ingredient) => {
+      const { name, quantity, unit, ingredient_id } = ingredient;
+      const newIngredient = await pool.query(
+        "UPDATE ingredients SET name = $1, quantity = $2, unit = $3 WHERE recipe_id = $4 AND ingredient_id = $5 RETURNING *",
+        [name, quantity, unit, id, ingredient_id]
+      );
+    });
+
+    //Update instructions
+
+    const instructions = await pool.query(
+      "SELECT * FROM instructions WHERE recipe_id = $1",
+      [id]
+    );
+
+    instructions.rows.forEach(async (instruction) => {
+      const { step_number, description, image, instruction_id } = instruction;
+      const newInstruction = await pool.query(
+        "UPDATE instructions SET step_number = $1, description = $2, image = $3 WHERE recipe_id = $4 AND instruction_id = $5 RETURNING *",
+        [step_number, description, image, id, instruction_id]
+      );
+    });
+
+    //Update tags
+
+    const tags = await pool.query(
+      "SELECT * FROM recipe_tags WHERE recipe_id = $1",
+      [id]
+    );
+
+    tags.rows.forEach(async (tag) => {
+      const newTag = await pool.query(
+        "UPDATE recipe_tags SET tag = $1 WHERE recipe_id = $2 RETURNING *",
+        [tag.tag, id]
+      );
+    });
+
+    //Delete recipe version
+
+    const deletedRecipeVersion = await pool.query(
+      "DELETE FROM recipe_versions WHERE recipe_id = $1",
+      [id]
+    );
+
+    //Update recipe version number
+
+    const recipeVersionNumber = await pool.query(
+      "SELECT * FROM recipe_versions WHERE original_recipe_id = $1",
+      [id]
+    );
+
+    if (recipeVersionNumber.rows.length > 0) {
+      recipeVersionNumber.rows.forEach(async (version) => {
+        const updatedRecipeVersionNumber = await pool.query(
+          "UPDATE recipe_versions SET version_number = $1 WHERE recipe_id = $2",
+          [version.version_number - 1, version.recipe_id]
+        );
+      });
+    }
+
+    res.status(200).json(updatedRecipe.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -95,11 +95,13 @@ CREATE TABLE IF NOT EXISTS instructions (
 );
 
 
+
 CREATE TABLE IF NOT EXISTS recipe_versions (
     version_id SERIAL PRIMARY KEY,
     original_recipe_id INT REFERENCES recipes(recipe_id),
     version_number INT NOT NULL,
     recipe_id INT REFERENCES recipes(recipe_id),
+    has_accepted BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
