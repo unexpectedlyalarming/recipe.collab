@@ -1109,7 +1109,7 @@ router.patch("/versions/accept/:id", async (req, res) => {
     }
 
     const updatedRecipe = await pool.query(
-      "UPDATE recipes SET title = $1, description = $2, user_id = $3, image = $4, tags = $5, preparation_time = $6, cooking_time = $7, servings = $8, difficulty_level = $9, updated_at = $10, tags = $11 WHERE recipe_id = $12 RETURNING *",
+      "UPDATE recipes SET title = $1, description = $2, user_id = $3, image = $4, preparation_time = $5, cooking_time = $6, servings = $7, difficulty_level = $8, updated_at = $9, tags = $10 WHERE recipe_id = $11 RETURNING *",
       [
         recipe.rows[0].title,
         recipe.rows[0].description,

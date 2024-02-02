@@ -243,7 +243,10 @@ export default function FullRecipe({ id }) {
         </Stack>
         {isForksOpen && forksView}
 
-        <ForkButton forkOfUserRecipe={forkOfUserRecipe} />
+        <ForkButton
+          forkOfUserRecipe={forkOfUserRecipe}
+          forkId={recipe?.recipe_id}
+        />
 
         <Typography variant="h4">Ingredients</Typography>
 
