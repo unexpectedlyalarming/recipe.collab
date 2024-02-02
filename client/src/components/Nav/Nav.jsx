@@ -73,22 +73,9 @@ export default function Nav() {
     >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
-          {/* Logo goes here \|/ */}
-          <Typography
-            variant="p"
-            noWrap
-            component="a"
-            sx={{
-              mr: 2,
-              display: { xs: "none", md: "flex" },
-              fontFamily: "monospace",
-              fontWeight: 700,
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            Recipe
-          </Typography>
+          {/* Logo goes here 
+          
+          \/ (really) */}
 
           <Box sx={{ flexGrow: 1, display: { xs: "flex", md: "none" } }}>
             <IconButton
