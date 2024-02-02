@@ -192,35 +192,27 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
 
       setFormattedRecipe(formattedRecipe);
 
-      console.log(formattedRecipe);
-
       // Todo: send recipe, support image upload, add loading indicator
 
-      if (isFork && inputRecipe) {
-        await forkRecipeRequest();
-      }
-      if (isFork && !inputRecipe) {
-        console.error("Cannot fork a new recipe");
-      }
-      if (!isFork) {
-        await sendRecipeRequest();
+      if (isFork) {
+        if (inputRecipe) {
+          const data = await forkRecipeRequest();
+          if (data) {
+            navigate(`/recipe/${data.recipe_id}`);
+          }
+        } else {
+          console.error("Cannot fork a new recipe");
+        }
       } else {
-        console.error("Dunno how you did this");
+        const data = await sendRecipeRequest();
+        if (data) {
+          navigate(`/recipe/${data.recipe_id}`);
+        }
       }
     } catch (error) {
       console.error(error);
     }
   }
-
-  useEffect(() => {
-    if (success) {
-      navigate(`/recipe/${newRecipe?.recipe_id}`);
-    }
-    if (forkSuccess) {
-      console.log(forkedRecipe);
-      navigate(`/recipe/${forkedRecipe?.recipe_id}`);
-    }
-  }, [success, forkSuccess]);
 
   function handleDropZone(acceptedFiles) {
     setCurrentImage(acceptedFiles[0]);

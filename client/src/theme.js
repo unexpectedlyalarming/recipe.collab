@@ -1,16 +1,16 @@
-import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
   palette: {
-    mode: "dark",
+    mode: "light",
     primary: {
-      main: "#00e676",
+      main: "#09b852",
     },
     secondary: {
       main: "#aa00ff",
     },
     background: {
-      default: "#000000",
+      default: "#eeeeee",
     },
     warning: {
       main: "#ffca28",
@@ -23,6 +23,12 @@ const theme = createTheme({
     },
     success: {
       main: "#00c853",
+    },
+    unselected: {
+      main: "#9e9e9e",
+    },
+    star: {
+      main: "#fdd835",
     },
   },
   typography: {
@@ -37,6 +43,7 @@ const theme = createTheme({
     },
     fontSize: 14,
   },
+
   props: {
     MuiContainer: {
       maxWidth: "xl",

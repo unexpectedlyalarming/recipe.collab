@@ -23,7 +23,7 @@ async function verifyUser(req, res, next) {
 
     const currentTime = Date.now() / 1000;
 
-    if (decoded.exp - currentTime < 15) {
+    if (decoded.exp - currentTime < 120) {
       const newToken = jwt.sign(decoded, secret_key);
       res.cookie("accessToken", newToken, {
         httpOnly: true,

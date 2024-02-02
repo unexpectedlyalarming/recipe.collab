@@ -63,7 +63,14 @@ export default function Nav() {
   ];
 
   return (
-    <AppBar position="static">
+    <AppBar
+      position="static"
+      sx={{
+        backgroundColor: "background.default",
+
+        boxShadow: 0,
+      }}
+    >
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           {/* Logo goes here \|/ */}
@@ -144,7 +151,7 @@ export default function Nav() {
                 onClick={handleCloseNavMenu}
                 component={Link}
                 to={(page === "Home" && "/") || "/" + page.toLowerCase()}
-                sx={{ my: 2, color: "white", display: "block" }}
+                sx={{ my: 2, color: "inherit", display: "block" }}
               >
                 {page}
               </Button>

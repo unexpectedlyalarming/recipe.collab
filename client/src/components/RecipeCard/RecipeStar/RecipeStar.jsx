@@ -45,7 +45,7 @@ export default function RecipeStar({ recipe }) {
     <IconButton onClick={handleStar}>
       <StarIcon
         sx={{
-          color: starred ? "yellow" : "white",
+          color: starred ? "star.main" : "unselected.main",
         }}
       />
       {starCount}

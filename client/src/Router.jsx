@@ -25,6 +25,7 @@ import CategoriesPage from "./pages/Categories/CategoriesPage";
 import SearchPage from "./pages/Search/SearchPage";
 import StarredRecipes from "./pages/Profile/Starred/StarredRecipes";
 import ForksPage from "./pages/Profile/Forks/ForksPage";
+import CssBaseline from "@mui/material/CssBaseline";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -145,6 +146,7 @@ function Routers() {
   return (
     <UserProvider value={{ user, setUser }}>
       <ThemeProvider theme={theme}>
+        <CssBaseline />
         <RouterProvider router={router}></RouterProvider>
       </ThemeProvider>
     </UserProvider>
