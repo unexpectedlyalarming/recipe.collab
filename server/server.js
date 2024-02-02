@@ -5,7 +5,7 @@ const morgan = require("morgan");
 const PrettyError = require("pretty-error");
 const cookieParser = require("cookie-parser");
 const helmet = require("helmet");
-const session = require("express-session");
+const path = require("path");
 const rateLimit = require("express-rate-limit");
 require("dotenv").config();
 
@@ -70,6 +70,23 @@ app.use("/cart", verifyUser, cartRouter);
 const followerRouter = require("./routes/follower");
 app.use("/follower", verifyUser, followerRouter);
 
+// Files
+
+function filesCors(req, res, next) {
+  res.header("Access-Control-Allow-Origin", corsOrigin);
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept"
+  );
+  res.header("Cross-Origin-Resource-Policy", "cross-origin");
+  next();
+}
+
+app.use(
+  "/uploads",
+  filesCors,
+  express.static(path.join(__dirname, "public/uploads"))
+);
 //User Activity Scheduler
 
 const scheduleUserActivityCheck = require("./utils/userActivityScheduler");
