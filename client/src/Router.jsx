@@ -26,6 +26,7 @@ import SearchPage from "./pages/Search/SearchPage";
 import StarredRecipes from "./pages/Profile/Starred/StarredRecipes";
 import ForksPage from "./pages/Profile/Forks/ForksPage";
 import CssBaseline from "@mui/material/CssBaseline";
+import Footer from "./components/Footer/Footer";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -37,6 +38,7 @@ function Routers() {
       <>
         <Nav />
         <Outlet />
+        <Footer />
       </>
     );
   };

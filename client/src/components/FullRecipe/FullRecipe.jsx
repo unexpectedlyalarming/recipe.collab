@@ -166,7 +166,7 @@ export default function FullRecipe({ id }) {
         </Stack>
 
         {recipe?.image && <Image src={recipe?.image} alt={recipe?.title} />}
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={2} useFlexGap flexWrap="wrap">
           {tags}
         </Stack>
         {userOwnsRecipe && (

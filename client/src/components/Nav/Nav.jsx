@@ -75,7 +75,7 @@ export default function Nav() {
         <Toolbar disableGutters>
           {/* Logo goes here \|/ */}
           <Typography
-            variant="h6"
+            variant="p"
             noWrap
             component="a"
             sx={{
@@ -120,30 +120,20 @@ export default function Nav() {
               }}
             >
               {pages.map((page) => (
-                <MenuItem key={page} onClick={handleCloseNavMenu}>
-                  <Typography textAlign="center">{page}</Typography>
+                <MenuItem
+                  key={page}
+                  onClick={handleCloseNavMenu}
+                  component={Link}
+                  to={(page === "Home" && "/") || "/" + page.toLowerCase()}
+                >
+                  <Typography textAlign="center" variant="p">
+                    {page}
+                  </Typography>
                 </MenuItem>
               ))}
             </Menu>
           </Box>
-          {/* Logo goes here /|\ */}
-          <Typography
-            variant="h5"
-            noWrap
-            component="a"
-            href="#app-bar-with-responsive-menu"
-            sx={{
-              mr: 2,
-              display: { xs: "flex", md: "none" },
-              flexGrow: 1,
-              fontFamily: "monospace",
-              fontWeight: 700,
-              color: "inherit",
-              textDecoration: "none",
-            }}
-          >
-            Recipe
-          </Typography>
+
           <Box sx={{ flexGrow: 1, display: { xs: "none", md: "flex" } }}>
             {pages.map((page) => (
               <Button
@@ -204,6 +194,7 @@ export default function Nav() {
                 >
                   <Typography
                     textAlign="center"
+                    variant="p"
                     sx={{
                       color: "inherit",
                       textDecoration: "none",

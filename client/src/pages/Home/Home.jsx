@@ -73,11 +73,6 @@ export default function Home() {
         <Typography variant="h2">Following</Typography>
         <SortedRecipeList sortMethod="following" />
       </Stack>
-      <Divider
-        sx={{
-          margin: "2rem",
-        }}
-      />
     </Container>
   );
 }

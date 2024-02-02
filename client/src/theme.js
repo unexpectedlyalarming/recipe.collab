@@ -32,14 +32,20 @@ const theme = createTheme({
     },
   },
   typography: {
-    fontFamily: "Open Sans",
+    fontFamily: "Rubik",
     h1: {
-      fontFamily: "Open Sans",
-      fontWeight: 700,
+      fontFamily: "Rubik",
+      fontWeight: 900,
+      textTransform: "uppercase",
     },
     h2: {
-      fontFamily: "Open Sans",
-      fontWeight: 400,
+      fontFamily: "Rubik",
+      fontWeight: 700,
+      textTransform: "capitalizes",
+      wordWrap: "break-word",
+    },
+    a: {
+      textDecoration: "none",
     },
     fontSize: 14,
   },
