@@ -4,6 +4,8 @@ const router = express.Router();
 
 const pool = require("../db");
 
+const uploadReturnURL = require("../utils/uploadReturnURL");
+
 //Get all users
 
 router.get("/", async (req, res) => {
@@ -110,6 +112,12 @@ router.get("/:id", async (req, res) => {
 //TODO: Decide whether to allow users to update their username and email
 //ALSO TODO: Decide whether password is input in req.body, or if I should fetch it from the db.
 
+/*
+update: Password should probably stick to the auth route.
+
+
+*/
+
 router.put("/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -162,6 +170,27 @@ router.put("/:id", async (req, res) => {
     }
 
     res.status(200).json(filteredUser);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Update profile picture of self
+
+router.put("/profilepic", uploadReturnURL, async (req, res) => {
+  try {
+    let image = req.fileURL ? req.fileURL : req.body.image;
+
+    if (!image) {
+      return res.status(400).json({ msg: "No image uploaded." });
+    }
+
+    const updatedUser = await pool.query(
+      "UPDATE users SET profile_pic = $1 WHERE user_id = $2",
+      [image, req.user.user_id]
+    );
+
+    res.status(200).json({ msg: "Profile picture updated." });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

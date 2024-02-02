@@ -17,6 +17,10 @@ import TagEditor from "./TagEditor/TagEditor";
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import FormGroup from "@mui/material/FormGroup";
+import Dropzone from "react-dropzone";
+import Paper from "@mui/material/Paper";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { Typography } from "@mui/material";
 
 export default function RecipeEditor({ inputRecipe, isFork }) {
   const navigate = useNavigate();
@@ -43,6 +47,9 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
   const [tags, setTags] = useState();
 
   const [originalImage, setOriginalImage] = useState(true);
+
+  const [currentImage, setCurrentImage] = useState(null);
+  const [isUploaded, setIsUploaded] = useState(false);
 
   const [formattedRecipe, setFormattedRecipe] = useState();
 
@@ -104,6 +111,11 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
     url: "/recipe",
     method: "post",
     body: formattedRecipe,
+    options: {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
   });
 
   const {
@@ -115,6 +127,11 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
     url: "/recipe/fork/" + inputRecipe?.recipe_id,
     method: "post",
     body: formattedRecipe,
+    options: {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
   });
 
   async function formatAndSendRecipe() {
@@ -156,7 +173,7 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
         return tag.tag;
       });
 
-      const image = originalImage ? inputRecipe?.image : null;
+      const image = originalImage ? inputRecipe?.image : currentImage;
 
       const formattedRecipe = {
         title: recipe.title,
@@ -205,6 +222,51 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
     }
   }, [success, forkSuccess]);
 
+  function handleDropZone(acceptedFiles) {
+    setCurrentImage(acceptedFiles[0]);
+    setIsUploaded(true);
+  }
+
+  function handleOriginalImage(checked) {
+    setOriginalImage(checked);
+
+    if (checked) {
+      setCurrentImage(null);
+      setIsUploaded(false);
+    }
+  }
+
+  const dropzoneView = (
+    <Dropzone
+      onDrop={handleDropZone}
+      accept="image/*"
+      multiple={false}
+      maxSize={5000000}
+    >
+      {({ getRootProps, getInputProps }) => (
+        <Paper
+          variant="outlined"
+          sx={(theme) => ({
+            padding: 2,
+            textAlign: "center",
+            background: isUploaded
+              ? theme.palette.success.main
+              : theme.palette.action.hover,
+          })}
+          {...getRootProps()}
+        >
+          <input {...getInputProps()} />
+          <CloudUploadIcon sx={{ fontSize: 50 }} />
+          <Typography variant="subtitle1">
+            {isUploaded
+              ? "File uploaded successfully!"
+              : "Drag or click to upload an image"}
+          </Typography>
+        </Paper>
+      )}
+    </Dropzone>
+  );
+
   return (
     <Container>
       <Stack spacing={2}>
@@ -237,12 +299,15 @@ export default function RecipeEditor({ inputRecipe, isFork }) {
             control={
               <Checkbox
                 checked={originalImage}
-                onChange={(e) => setOriginalImage(e.target.checked)}
+                onChange={(e) => handleOriginalImage(e.target.checked)}
               />
             }
             label="Use Original Image"
           />
         </FormGroup>
+
+        {!originalImage && dropzoneView}
+
         <InputLabel id="prep-time-label">Prep Time*</InputLabel>
         <Stack direction="row" spacing={2}>
           <TextField

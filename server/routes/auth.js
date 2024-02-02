@@ -120,7 +120,7 @@ router.post("/login", loginLimiter, async (req, res) => {
 
     res.cookie("accessToken", token, {
       httpOnly: true,
-      maxAge: 1000 * 60 * 30,
+      maxAge: 1000 * 60 * 60 * 24, // 1 day
     });
 
     req.user = filteredUser;

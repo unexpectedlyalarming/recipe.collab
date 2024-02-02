@@ -9,6 +9,9 @@ const addView = require("../utils/addView");
 const rateLimit = require("express-rate-limit");
 
 const _ = require("lodash");
+
+const uploadReturnURL = require("../utils/uploadReturnURL");
+
 //Client side object protoype:
 
 // {
@@ -54,88 +57,95 @@ const creationLimiter = rateLimit({
 
 // Create recipe
 
-router.post("/", checkValidForm, creationLimiter, async (req, res) => {
-  try {
-    const {
-      title,
-      description,
-      image,
-      tags,
-      preparation_time,
-      cooking_time,
-      servings,
-      difficulty_level,
-      ingredients,
-      instructions,
-    } = req.body;
-
-    const user_id = req.user.user_id;
-
-    //Include tags in recipe_tags table and in recipe object
-
-    const newRecipe = await pool.query(
-      "INSERT INTO recipes (title, description, user_id, image, preparation_time, cooking_time, servings, difficulty_level, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
-      [
+router.post(
+  "/",
+  checkValidForm,
+  creationLimiter,
+  uploadReturnURL,
+  async (req, res) => {
+    try {
+      const {
         title,
         description,
-        user_id,
-        image,
+        tags,
         preparation_time,
         cooking_time,
         servings,
         difficulty_level,
-        tags,
-      ]
-    );
+        ingredients,
+        instructions,
+      } = req.body;
 
-    const recipe_id = newRecipe.rows[0].recipe_id;
+      let image = req.fileUrl ? req.fileUrl : req.body.image;
 
-    ingredients.forEach(async (ingredient) => {
-      const { name, quantity, unit } = ingredient;
-      const newIngredient = await pool.query(
-        "INSERT INTO ingredients (recipe_id, name, quantity, unit) VALUES ($1, $2, $3, $4) RETURNING *",
-        [recipe_id, name, quantity, unit]
+      const user_id = req.user.user_id;
+
+      //Include tags in recipe_tags table and in recipe object
+
+      const newRecipe = await pool.query(
+        "INSERT INTO recipes (title, description, user_id, image, preparation_time, cooking_time, servings, difficulty_level, tags) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING *",
+        [
+          title,
+          description,
+          user_id,
+          image,
+          preparation_time,
+          cooking_time,
+          servings,
+          difficulty_level,
+          tags,
+        ]
       );
-    });
 
-    instructions.forEach(async (instruction) => {
-      const { step_number, description, image } = instruction;
-      const newInstruction = await pool.query(
-        "INSERT INTO instructions (recipe_id, step_number, description, image) VALUES ($1, $2, $3, $4) RETURNING *",
-        [recipe_id, step_number, description, image]
-      );
-    });
+      const recipe_id = newRecipe.rows[0].recipe_id;
 
-    if (tags) {
-      tags.forEach(async (tag) => {
-        tag = _.startCase(tag);
-        const newTag = await pool.query(
-          "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
-          [recipe_id, tag]
+      ingredients.forEach(async (ingredient) => {
+        const { name, quantity, unit } = ingredient;
+        const newIngredient = await pool.query(
+          "INSERT INTO ingredients (recipe_id, name, quantity, unit) VALUES ($1, $2, $3, $4) RETURNING *",
+          [recipe_id, name, quantity, unit]
         );
       });
+
+      instructions.forEach(async (instruction) => {
+        const { step_number, description, image } = instruction;
+        const newInstruction = await pool.query(
+          "INSERT INTO instructions (recipe_id, step_number, description, image) VALUES ($1, $2, $3, $4) RETURNING *",
+          [recipe_id, step_number, description, image]
+        );
+      });
+
+      if (tags) {
+        tags.forEach(async (tag) => {
+          tag = _.startCase(tag);
+          const newTag = await pool.query(
+            "INSERT INTO recipe_tags (recipe_id, tag) VALUES ($1, $2) RETURNING *",
+            [recipe_id, tag]
+          );
+        });
+      }
+
+      const newRecipeObject = {
+        recipe_id: newRecipe.rows[0].recipe_id,
+        title: newRecipe.rows[0].title,
+        description: newRecipe.rows[0].description,
+        user_id: newRecipe.rows[0].user_id,
+        image: newRecipe.rows[0].image,
+        tags: newRecipe.rows[0].tags,
+        preparation_time: newRecipe.rows[0].preparation_time,
+        cooking_time: newRecipe.rows[0].cooking_time,
+        servings: newRecipe.rows[0].servings,
+        difficulty_level: newRecipe.rows[0].difficulty_level,
+        ingredients: ingredients,
+        instructions: instructions,
+      };
+
+      res.status(200).json(newRecipeObject);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
     }
-
-    const newRecipeObject = {
-      recipe_id: newRecipe.rows[0].recipe_id,
-      title: newRecipe.rows[0].title,
-      description: newRecipe.rows[0].description,
-      user_id: newRecipe.rows[0].user_id,
-      image: newRecipe.rows[0].image,
-      tags: newRecipe.rows[0].tags,
-      preparation_time: newRecipe.rows[0].preparation_time,
-      cooking_time: newRecipe.rows[0].cooking_time,
-      servings: newRecipe.rows[0].servings,
-      difficulty_level: newRecipe.rows[0].difficulty_level,
-      ingredients: ingredients,
-      instructions: instructions,
-    };
-
-    res.status(200).json(newRecipeObject);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
   }
-});
+);
 
 // Get recipes, sort by date, limit and paginate
 
@@ -512,14 +522,19 @@ router.get("/:id", addView, async (req, res) => {
 
     const forks = [...originalRecipeForks.rows, ...recipeVersionForks.rows];
 
-    const originalRecipeId = recipeVersion.rows[0].original_recipe_id;
-    const getUserIdFromRecipeId = await pool.query(
-      "SELECT user_id FROM recipes WHERE recipe_id = $1",
-      [originalRecipeId]
-    );
+    let originalRecipeId;
+    let isForkOfCurrentUser = false;
+    if (recipeVersion.rows[0]) {
+      originalRecipeId = recipeVersion.rows[0].original_recipe_id;
+      const getUserIdFromRecipeId = await pool.query(
+        "SELECT user_id FROM recipes WHERE recipe_id = $1",
+        [originalRecipeId]
+      );
 
-    const isForkOfCurrentUser =
-      getUserIdFromRecipeId.rows[0].user_id === req.user.user_id;
+      if (getUserIdFromRecipeId.rows[0].user_id === req.user.user_id) {
+        isForkOfCurrentUser = true;
+      }
+    }
 
     const recipeObject = {
       recipe_id: recipe.rows[0].recipe_id,
@@ -557,14 +572,14 @@ router.get("/:id", addView, async (req, res) => {
 
 // Update recipe (note to frontend: send full data object)
 
-router.put("/:id", checkValidForm, async (req, res) => {
+router.put("/:id", checkValidForm, uploadReturnURL, async (req, res) => {
   try {
     const { id } = req.params;
 
     const {
       title,
       description,
-      image,
+
       tags,
       preparation_time,
       cooking_time,
@@ -573,6 +588,8 @@ router.put("/:id", checkValidForm, async (req, res) => {
       ingredients,
       instructions,
     } = req.body;
+
+    let image = req.fileUrl ? req.fileUrl : req.body.image;
 
     const user_id = req.user.user_id;
 
@@ -681,14 +698,14 @@ async function checkValidForm(req, res, next) {
 
 //Create recipe fork
 
-router.post("/fork/:id", async (req, res) => {
+router.post("/fork/:id", uploadReturnURL, async (req, res) => {
   try {
     const { id } = req.params;
 
     const {
       title,
       description,
-      image,
+
       tags,
       preparation_time,
       cooking_time,
@@ -697,6 +714,8 @@ router.post("/fork/:id", async (req, res) => {
       ingredients,
       instructions,
     } = req.body;
+
+    let image = req.fileUrl ? req.fileUrl : req.body.image;
 
     const recipe = await pool.query(
       "SELECT * FROM recipes WHERE recipe_id = $1",
