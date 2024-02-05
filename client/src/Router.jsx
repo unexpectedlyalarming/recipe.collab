@@ -27,6 +27,7 @@ import StarredRecipes from "./pages/Profile/Starred/StarredRecipes";
 import ForksPage from "./pages/Profile/Forks/ForksPage";
 import CssBaseline from "@mui/material/CssBaseline";
 import Footer from "./components/Footer/Footer";
+import ListsPage from "./pages/Lists/ListsPage";
 
 function Routers() {
   const [user, setUser] = useState(null);
@@ -118,6 +119,10 @@ function Routers() {
         {
           path: "/cart",
           element: <CartPage />,
+        },
+        {
+          path: "/lists",
+          element: <ListsPage />,
         },
         {
           path: "/categories",
