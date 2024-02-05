@@ -6,14 +6,36 @@ const pool = require("../db");
 
 // Get all lists by user id
 
-router.get("/:userId", async (req, res) => {
+router.get("/", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.user_id;
     const lists = await pool.query("SELECT * FROM lists WHERE user_id = $1", [
       userId,
     ]);
 
     res.status(200).json(lists.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+//Get list by id
+
+router.get("/item/:listId", async (req, res) => {
+  try {
+    const { listId } = req.params;
+
+    const listRecipes = await pool.query(
+      "SELECT * FROM list_recipes WHERE list_id = $1 RETURNING *",
+      [listId]
+    );
+
+    const recipes = await pool.query(
+      "SELECT * from recipes WHERE recipe_id = $1 RETURNING *",
+      [listRecipes.rows[0].list_recipe_id]
+    );
+
+    res.status(200).json(recipes.rows[0]);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

@@ -29,6 +29,7 @@ import { UserContext } from "../../contexts/userContext";
 import AddToCart from "./AddToCart/AddToCart";
 import RecipeStar from "../RecipeCard/RecipeStar/RecipeStar";
 import ForkButton from "./ForkButton/ForkButton";
+import AddToList from "./AddToList/AddToList";
 
 export default function FullRecipe({ id }) {
   const navigate = useNavigate();
@@ -180,6 +181,7 @@ export default function FullRecipe({ id }) {
             </Button>
           </Stack>
         )}
+        <AddToList />
         <Stack direction="row" spacing={2}>
           {recipe?.recipe_id && <AddToCart recipeId={recipe?.recipe_id} />}
         </Stack>

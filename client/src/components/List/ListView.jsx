@@ -1,10 +1,12 @@
 import useApi from "../../hooks/useApi";
 import { useEffect } from "react";
-import Loading from "../Loading/Loading";
+import Loading from "../../pages/Loading/Loading";
 import { useState } from "react";
 import Container from "@mui/material/Container";
 import List from "./List";
-export default function ListView({ list_id }) {
+import { useParams } from "react-router-dom";
+export default function ListView() {
+  const { id } = useParams;
   const [refresh, setRefresh] = useState(false);
   const {
     data: listData,
@@ -13,7 +15,7 @@ export default function ListView({ list_id }) {
     request,
     success,
   } = useApi({
-    url: `/list/${list_id}`,
+    url: `/list/item/${id}`,
   });
 
   useEffect(() => {

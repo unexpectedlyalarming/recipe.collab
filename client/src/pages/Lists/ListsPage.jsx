@@ -17,7 +17,7 @@ export default function ListsPage() {
     request,
     setData: setLists,
   } = useApi({
-    url: `/list/${user.user_id}`,
+    url: `/list`,
   });
 
   useEffect(() => {
