@@ -66,19 +66,19 @@ npm run dev
 
 # Features
 
-### Full fledged recipe editor
+### Full fledged recipe editor ✏️
 No more markdown or janky outdated editor. Just a simple editor that makes it hard to format the recipe wrong.
 
-### Recipe forking
+### Recipe forking 🍴
 A key feature, forking (like in Git) lets you copy and modify a recipe for yourself. May the best recipe win.
 
-### Carts
+### Carts 🛒
 Carts let you save recipes for your next meal plan. In the current roadmap, the cart will calculate and aggregate measurements, saving you time when planning your meals.
 
-### Various user features
+### Various user features 🚀
 Along with these, you can expect plenty of useful features like filtering by tags; stars, comments, lists, etc.
 
-# Known Issues
+# Known Issues 🐞
 ## (and deprecated features)
 
 - Ratings show up throughout the codebase but they aren't in use. Eventually they will be removed
